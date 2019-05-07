@@ -1,0 +1,72 @@
+---
+title: "Introduction to MoBaFeaS"
+author: "Martin Binder"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Introduction to MoBaFeaS}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+library("parallelMap")
+library("ParamHelpers")
+library("mlr")
+library("mlrCPO")
+
+library("mlrMBO")
+library("mobafeas")
+
+library("magrittr")
+library("ggplot2")
+
+
+set.seed(8008135)
+
+options(width = 80)
+data.table::setDTthreads(1)
+
+cores <- parallel::detectCores()
+if (Sys.getenv("FASTVIGNETTE") != "true") {
+  cores <- min(cores, 2)
+}
+if (.Platform$OS.type == "windows") {
+  parallelStartSocket(cores, show.info = FALSE)
+} else {
+  parallelStartMulticore(cores, show.info = FALSE, mc.set.seed = FALSE)
+}
+
+print.list <- function(x) {
+  if (all(vlapply(x, is.atomic))) {
+    x <- sapply(x, function(x) if (is.numeric(x)) round(x, 3) else x)
+    catf("list(%s)",
+      collapse(sprintf("%s = %s", names(x),
+        vcapply(x, deparse, width.cutoff = 500, nlines = 1)), ", "))
+  } else {
+    NextMethod(x)
+  }
+}
+
+knitr::opts_chunk$set(
+  cache = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Using MoBaFeaS
+
+`mobafeas` doesn't do anything right now.
+
+```{r, eval = FALSE}
+library("mlrMBO")
+library("magrittr")
+library("ggplot2")
+library("ParamHelpers")
+library("mlr")
+library("mlrCPO")
+library("mobafeas")
+```
+
