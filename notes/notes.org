@@ -1,0 +1,112 @@
+
+* Benchmarks and Baselines:
+- my mlrMBO implementation in mosmafs
+- Gaussian Process with naive space
+- RandomForest MBO with naive space
+- CEGO
+- BOCS
+- Graphkernel
+- exp(- theta d(x1, x2))
+- Agreement Measure
+  - alone
+  - with correlation max
+  - with MIM max
+
+* CEGO package
+- generates benchmarks: =benchmarkGenerator*=. interesting may be =benchmarkGeneratorNKL=
+- =landscapeGenerator*=: Gaussian, MUL, UNI: create fitness landscape, from distanceFunction. Gaussian, multimodal, unimodal
+- input values appear to be numeric vectors
+- matrix correction: =correction*=, for CNSD, Definite, Distance (correctionDefinite/CNDS + repairConditionsDistanceMatrix), KernelMatrix (correctionDefinite + repairConditionsCorrelationMatrix)
+- =is.*=, CNSD, NSD, PSD: check if X, but not if symmetric
+- =repairConditionsCorrelationMatrix=, =repairConditionsDistanceMatrix=
+
+- =createSimulatedTestFunction=?? see =testFunctionGeneratorSim=
+
+- =modelKriging=: distance-based kriging model
+  - =predict.modelKriging=
+  - =simulate.modelKriging=
+- =modelLinear=: distance-based "linear" model
+  - =predict.modelLinear=
+- =modelRBFN=: distance-based rbfn model
+  - =predict.modelRBFN=
+    
+- =mutation*=: BinaryBitFlip, BinaryBlockInversion, BinaryCycle, BinarySingleBitFlip, PermutationInsert, PermutationInterchange, PermutationReversal, PermutationSwap, SelfAdapt, StringRandomChange
+- =recombination*=: Binary1Point, Binary2Point, BinaryAnd, BinaryUniform, PermutationAlternatingPosition, PermutationCycleCrossover, PermutationOrderCrossover1, PermutationPositionBased, SelfAdapt, StringSinglePointCrossover, 
+
+- =nearCNSD=: nearest CNSD matrix, cf. Matrix::nearPD
+
+- optim2Opt two-opt local search for TSP
+- =optimCEGO=: main entry function
+- =optimEA=: evolutionary algorithm
+- =optimInterface=
+- =optimMIES=
+- =optimRS=: random search
+
+- =infillExpectedImprovement= (mean, sd, min)
+
+- =kernelMatrix=: kernFun to matrix
+- =distanceMatrix=: distFun to matrix
+- =distanceVector=: distFun: dist of one element to list of elements
+- =distance*=: NumericHamming, NumericLCStr, NumericLevenshtein, PermutationAdjacency, PermutationChebyshev, PermutationCos, PermutationEuclidean, PermutationHamming, PermutationInsert, PermutationInterchange, PermutationLCStr, PermutationLee, PermutationLevenshtein, PermutationLex, PermutationManhattan, PermutationPosition, PermutationPosition2, PermutationR, PermutationSwap, RealEuclidean, StringHamming, StringLCStr, StringLevenshtein
+- =lexicographicPermutationOrderNumber= for lexicographic distance
+
+- =solutionFunctionGenerator*= Binary, Permutation, String
+
+- =testFunctionGeneratorSim=
+
+* GP Packages
+
+- mlegp 
+- GPfit
+- fastGP
+- laGP
+
+** kerGP
+
+- checkGrad( covMan object ) :: check whether gradient of covMan is correct, using numerical differentiation
+- checkPar :: check vector has length, names, default values
+- covAll :: class
+  - checkX( cov kernel obj ) :: check design mat and cov mat compatibility, with names check and assignment
+  - inputNames :: names of input names
+  - npar :: number of parameters
+  - simulPar :: simulates random values for parameters
+  - simulate :: 
+- covariance objects ::
+  - covComp :: composite covariance kernels
+  - covMan :: manually defined functions
+    - k1Exp, k1Matern3_2, k1Matern5_2, k1Gauss :: 1D kernels
+    - kGauss, kMatern,  :: 
+  - covQual :: class: covariance kernel for qualitative (i.e. discrete) inputs
+    - covQualNested :: cov structure for qualitative inputs obtained by nesting, whatever that means.
+    - q1CompSymm :: qual correlation with one input, compound symmetric correlation
+    - q1Diag :: diagonal structure
+    - q1Symm :: symmetric correlation
+  - covRadial :: radial correlation or covariance kernel from function
+  - covTS :: Tensor Sum cov kernel
+  - :: 
+- covMat :: get covariance matrix from covariance function
+- coef( cov kernel, type [coeff names or "all"], as (vector, list, matrix)) :: get or set coefficients
+  - coefLower, coefUpper ::
+- gls :: generalized least squares estimation with a given cov kernel
+- gp :: gaussian process
+- mle :: maximum likelihood estimation of gp
+- optimMethods :: list optimization methods
+
+- varVec :: numeric vector of self-variance
+
+- parMap :: list kernel parameter info
+- parseCovFormula :: parse covariance formula
+
+- plot.gp, plot.simulate.gp :: plot
+- predict.gp :: predict
+- simulate.gp :: simulate GP paths
+
+- symIndices :: vector of indices for symmetric / anti-symmetric matrices
+     
+- contr.helmod :: helmert coding matrix
+- corLevCompSymm :: corr matrix for the compound symmetry structure
+- corLevDiag :: correlation or covariance matrix for a diagonal structure
+- corLevSymm :: correlation matrix for a general symmetric correlation structure
+
+
+
