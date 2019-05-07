@@ -1,4 +1,17 @@
 
+* MoBaFeaS Design
+
+- user specifies kernel for feature selection:
+#+BEGIN_SRC R
+library("kergp")
+kern.hamming <- function(f1, f2, par) {
+  K <- exp(-sum(abs((f1 - f2) * par)))
+  attr(K, "gradient") <- -abs(f1 - f2) * par
+  K
+}
+#+END_SRC
+
+
 * Benchmarks and Baselines:
 - my mlrMBO implementation in mosmafs
 - Gaussian Process with naive space
