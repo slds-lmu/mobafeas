@@ -10,14 +10,42 @@ kern.hamming <- function(f1, f2, par) {
   K
 }
 #+END_SRC
+- user specifies task, learner and param set
+#+BEGIN_SRC R
+library("mlr")
+library("mlrCPO")
+task <- pid.task
+lrn <- makeLearner("classif.knn")
+ps <- pSS(k: numeric[0, 4] [[trafo = function(x) round(exp(x))]])
+#+END_SRC
+- user creates objective
+#+BEGIN_SRC R
+obj <- makeMobafeasObjective(lrn, task, ps, cv5)
+# optional: measure, holdout.data, worst.measure, cpo
+#+END_SRC
+- user creates initial design, or doesn't
+#+BEGIN_SRC R
 
+#+END_SRC
+
+* mlrMBO internals
+
+- proposePoints: leads by one path or another to:
+- proposePointsByInfillOptimization
+  - control$propose.points
+  - control$infill.crit
+  - "infill_" + control$infill.crit$id
+  - control$infill.opt: character, but may identify a function using match.fun (getInfillOptFunction)
+  - 
 
 * Benchmarks and Baselines:
+*Problem*: how to do multi-objective with those?
+
 - my mlrMBO implementation in mosmafs
 - Gaussian Process with naive space
 - RandomForest MBO with naive space
 - CEGO
-- BOCS
+- BOCS, https://github.com/baptistar/BOCS
 - Graphkernel
 - exp(- theta d(x1, x2))
 - Agreement Measure

@@ -4,4 +4,5 @@
 #' @import mlr
 #' @import mlrCPO
 #' @import stats
+#' @import mosmafs
 NULL

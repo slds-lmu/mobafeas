@@ -6,7 +6,7 @@
 
 ## Project Status
 
-This project is work in progress, it will probably not be useful in its current state.
+This project is work in progress, it will probably not be useful in its current state. This project may or may not get merged with [`mosmafs`](/compstat-lmu/mosmafs) eventually.
 
 ## Installation
 
