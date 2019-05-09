@@ -32,11 +32,28 @@ obj <- makeMobafeasObjective(lrn, task, ps, cv5)
 
 - proposePoints: leads by one path or another to:
 - proposePointsByInfillOptimization
+  - models: getOptStateModels: 
   - control$propose.points
   - control$infill.crit
   - "infill_" + control$infill.crit$id
   - control$infill.opt: character, but may identify a function using match.fun (getInfillOptFunction)
   - 
+
+* Infill Crits
+** EI
+- input: point preds, point ses, point feature fractions, feature fraction wise minima --> pareto front
+** CB
+- input: point preds, point ses, point feature fractions, feature fraction wise minima --> pareto front
+** MeanResponse
+- input: point preds, point feature fractions, feature fraction wise minima --> pareto front
+** EQI
+- input: point preds, point ses, point feature fractions, feature fraction wise min of (each point's predictions + se), nugget
+- won't implement this yet
+** AEI
+- input: point preds, point ses, point feature fractions, nugget
+- won't implement this yet
+
+
 
 * Benchmarks and Baselines:
 *Problem*: how to do multi-objective with those?
