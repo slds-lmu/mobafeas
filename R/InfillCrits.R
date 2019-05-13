@@ -56,7 +56,28 @@ as.MBOInfillCrit <- function(x) {
 }
 
 as.MBOInfillCrit.Infill <- function(x) {
-  addClasses(list(fun = x, name = class(x)[1], id = class(x)[1], opt.direction = "maximize",
+  fun <- function(points, models, control, par.set, designs, iter, progress, attributes = FALSE) {
+    # --- TODO: this is the same as in infillOpt.R
+    model <- models[[1]]
+    design <- designs[[1]]
+    design.X <- design
+    design.X[[control$y.name]] <- NULL
+    pointdata <- predict(object = model, newdata = design.X)$data[c("response", "se")]
+    pointdata$value <- design[[control$y.name]]
+    pointdata$c2 <- apply(design.X[grepl("^selector\\.selection[0-9]+$", colnames(design.X))], 1, mean)
+    popmatrix <- rbind(pointdata$value, pointdata$c2)
+    paretofront <- popmatrix[, ecr::nondominated(popmatrix), drop = FALSE]
+    paretofront <- paretofront[, order(paretofront[2, ]), drop = FALSE]
+    nugget <- model$nugget # TODO
+    # --- TODO end
+    # newdesign <- fixDesignLogicals(args, par.set)  # if we treat logicals as factors, and I think this is what will happen, we don't need this.
+    suggestions <- predict(object = model, newdata = points)$data[c("response", "se")]
+    suggestions$c2.value <- apply(points[grepl("^selector\\.selection[0-9]+$", colnames(points))], 1, mean)
+
+    -acquisition(x, suggestions, c(Inf, 1), paretofront, pointdata, nugget)
+  }
+  attr(fun, "infill.crit.object") <- x
+  addClasses(list(fun = fun, name = class(x)[1], id = class(x)[1], opt.direction = "maximize",
     components = character(0), params = list(), requires.se = TRUE), c(paste0("InfillCrit", toupper(class(x)[1])), "MBOInfillCrit"))
 }
 
@@ -90,7 +111,7 @@ integratePareto <- function(fnc, suggestions, nadir, paretofront) {
     c2.upper <- paretofront[2, pf]
     addendum <- fnc(suggestions, c1.upper)
     mul <- pmax(0, c2.upper - pmax(c2.lower, suggestions$c2.value))
-    integral <- integral + addendum * mul
+    integral <- integral + ifelse(mul == 0, 0, addendum * mul)
     c2.lower <- c2.upper
     c1.upper <- paretofront[1, pf]
   }

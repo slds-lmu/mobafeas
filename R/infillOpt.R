@@ -3,6 +3,9 @@
 #' @export
 infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, designs, iter, ...) {
 
+  infill.crit <- attr(infill.crit, "infill.crit.object")
+
+  # --- TODO: this is the same as in as.MBOInfillCrit.Infill in InfillCrits.R
   model <- models[[1]]
   design <- designs[[1]]
   design.X <- design
@@ -12,28 +15,29 @@ infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, d
   pointdata$c2 <- apply(design.X[grepl("^selector\\.selection[0-9]+$", colnames(design.X))], 1, mean)
   popmatrix <- rbind(pointdata$value, pointdata$c2)
   paretofront <- popmatrix[, ecr::nondominated(popmatrix), drop = FALSE]
-  paretofront <- popmatrix[, order(paretofront[, 2]), drop = FALSE]
+  paretofront <- paretofront[, order(paretofront[2, ]), drop = FALSE]
   nugget <- model$nugget # TODO
+  # --- TODO end
 
   par.set$pars <- lapply(par.set$pars, function(x) {
     x$trafo <- NULL
     x
   })
 
-  nadir <- smoof::getRefPoint(control$fun)
+  nadir <- c(Inf, 1)
 
 
 
   ecrcall <- control$mosmafs
 
-  ecrall$population <- initSelector(sampleValues(par.set, ecrcall$mu, discrete.names = TRUE))
+  ecrcall$population <- initSelector(sampleValues(par.set, ecrcall$mu, discrete.names = TRUE))
 
 
   ecrcall$mu <- NULL
   ecrcall$fitness.fun <- smoof::makeSingleObjectiveFunction("infillopt", has.simple.signature = FALSE, par.set = par.set,
     noisy = TRUE, fn = function(args) {
-      newdesign <- convertDataFrameCols(args, ints.as.num = TRUE, logicals.as.factor = FALSE)
-      suggestions <- predict(object = model, newdata = newdesign)$data[c("response", "se")]$data[c("response", "se")]
+      newdesign <- convertDataFrameCols(args, ints.as.num = TRUE, logicals.as.factor = TRUE)
+      suggestions <- predict(object = model, newdata = newdesign)$data[c("response", "se")]
       suggestions$c2.value <- apply(newdesign[grepl("^selector\\.selection[0-9]+$", colnames(newdesign))], 1, mean)
       -acquisition(infill.crit, suggestions, nadir, paretofront, pointdata, nugget)
     }) %>% setMosmafsVectorized()

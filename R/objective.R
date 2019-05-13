@@ -58,30 +58,35 @@ makeMobafeasObjective <- function(learner, task, ps, resampling, measure = NULL,
   assertNumber(worst.measure, finite = TRUE)
   obj.factor <- if (measure$minimize) 1 else -1
   worst.measure <- worst.measure * obj.factor
-  ps <- c(ps, pSS(selector.selection:logical^getTaskNFeats(task)))
+  ps <- c(ps, pSS(selector.selection:integer[0, 1]^getTaskNFeats(task)))
   learner <- cpoSelector() %>>% checkLearner(learner, type = getTaskType(task))
   learner %<<<% cpo
   argnames <- getParamIds(getParamSet(learner))
-  smoof::makeMultiObjectiveFunction(sprintf("mosmafs_%s_%s", learner$id, task$task.desc$id),
-    has.simple.signature = FALSE, par.set = ps, n.objectives = 2, noisy = FALSE,  # we are lying about 'noisy' here because mlrMBO will complain if we don't
-    ref.point = c(worst.measure, 1),
-    fn = function(args, holdout = FALSE) {
-      if (holdout && is.null(holdout.data)) {
-        return(c(perf = Inf, propfeat = Inf))
-      }
+  smoof::makeSingleObjectiveFunction(sprintf("mosmafs_%s_%s", learner$id, task$task.desc$id),
+    has.simple.signature = FALSE, par.set = ps, noisy = TRUE,
+    fn = function(x) {
+      args <- x
+
       args <- args[intersect(names(args), argnames)]
+      args$selector.selection <- as.logical(args$selector.selection)
       learner <- setHyperPars(learner, par.vals = args)
-      if (holdout) {
-        model <- train(learner, task)
-        prd <- predict(model, holdout.data)
-        val <- performance(prd, list(measure), task, model)[1]
-      } else {
-        val <- resample(learner, task, resampling, list(measure), show.info = FALSE)$aggr
-      }
+      val <- resample(learner, task, resampling, list(measure), show.info = FALSE)$aggr
+
       if (is.na(val)) {
         val <- worst.measure
       }
       propfeat <- mean(args$selector.selection)
-      c(perf = unname(val * obj.factor), propfeat = propfeat)
+      # c(perf = unname(val * obj.factor), propfeat = propfeat)
+      ret <- unname(val * obj.factor)
+      if (!is.null(holdout.data)) {
+        model <- train(learner, task)
+        prd <- predict(model, holdout.data)
+        val <- performance(prd, list(measure), task, model)[1]
+        if (is.na(val)) {
+          val <- worst.measure
+        }
+        attr(ret, "extras") = list(holdout = unname(val * obj.factor))
+      }
+      ret
     })
 }

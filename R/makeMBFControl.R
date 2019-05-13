@@ -11,8 +11,9 @@ makeMBFControl <- function(mosmafs.config, propose.points = 1, infill.crit = Inf
   }
   ctrl <- makeMBOControl(n.objectives = 1, propose.points = propose.points, final.evals = 0, y.name = "y") %>%
     setMBOControlInfill() %>% setMBFControlInfill(infill.crit, mosmafs.config)
-  ctrl$n.objectives <- 2
-  ctrl$multiobj.method <- "semi-dib"
+#  ctrl$n.objectives <- 2
+#  ctrl$y.name <- sprintf("y_%s", seq_len(ctrl$n.objectives))
+#  ctrl$multiobj.method <- "semi-dib"
   ctrl
 }
 
