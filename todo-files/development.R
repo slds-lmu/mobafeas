@@ -123,12 +123,33 @@ kmlrn <- makeLearner("regr.km", covtype = "matern3_2", optim.method = "gen", pre
 
 bhx <- subsetTask(bh.task, features = setdiff(getTaskFeatureNames(bh.task), "chas"))
 
-gplrn <- makeLearner("regr.kernel.gp", special.kernel = kMatern(d = 2, nu = "3/2"), special.kernel.features = c("tax", "rad"), default.kernel = "matern3_2", predict.type = "se", multistart = 5)
+kmat <- kMatern(d = 2, nu = "3/2")
+coefUpper(kmat) <- c(4 * diff(apply(bhx$env$data[c("tax", "rad")], 2, range)), 1)
+gplrn <- makeLearner("regr.kernel.gp", special.kernel = kmat, special.kernel.features = c("tax", "rad"), default.kernel = "matern3_2", predict.type = "se")
+
+tr1 <- train(gplrn, bhx)
+tr2 <- train(gplrn, bhx)
+tr3 <- train(gplrn, bhx)
+
+tr1$learner.model
+tr2$learner.model
+tr3$learner.model
+
+as.list(gplrn$par.vals$savevarenv)
+
+kmat1 <- kmat
+kergp::coef(kmat) <- c(1, 2, 1)
+kergp::coef(kmat)
+kergp::coef(kmat1)
 
 system.time(gptrn <- train(gplrn, bhx), gcFirst = FALSE)
 system.time(kmtrn <- train(kmlrn, bhx), gcFirst = FALSE)
 
 attributes(kmtrn$learner.model)$logLik
+gptrn$learner.model$logLik
+gptrn$learner.model
+
+kmtrn$learner.model
 
 coef(gptrn$learner.model)
 
@@ -142,7 +163,7 @@ gptrn$learner.model
 
 getTaskFeatureNames(bh.task)
 
-which.col <- "nox"
+which.col <- "age"
 pmat <- t(sapply(do.call(seq, c(as.list(range(bh.task$env$data[[which.col]])), list(length.out = 100))), function(x) {
   l <- getTaskData(bhx2, target.extra = TRUE)$data
   l[[which.col]] <- x
@@ -162,9 +183,9 @@ parallelStartMulticore(10)
 
 logdev <- makeMeasure(id = "logdev", minimize = TRUE, best = -Inf, worst = Inf,
   properties = c("regr", "req.pred", "req.truth"),
-  note = "Sum of the -dnorm()",
+  note = "Mean of the -dnorm()",
   fun = function(task, model, pred, feats, extra.args) {
-    -sum(dnorm(pred$data$response, pred$data$truth, pred$data$se, TRUE))
+    -mean(dnorm(pred$data$response, pred$data$truth, pred$data$se, TRUE))
   }
 )
 
@@ -178,12 +199,23 @@ registerDoParallel(cl)
 
 # doParallel::registerDoParallel(parallel::makeForkCluster(2))
 
-gpres3 <- resample(gplrn, bhx, cv10, measures = list(logdev))
+gpres5 <- resample(gplrn, bhx, cv10, measures = list(logdev))
+
+
+
+
 kmres2 <- resample(kmlrn, bhx, cv10, measures = list(logdev))
 
 gpres2
 kmres2
 gpres3
+gpres4
+gpres5
+
+median(gpres5$measures.test$logdev)
+median(gpres4$measures.test$logdev)
+median(gpres3$measures.test$logdev)
+points(kmres2$measures.test, pch = "+")
 
 performance(gpres2$pred)
 performance(kmres2$pred)
@@ -210,3 +242,116 @@ covMat(kg, matrix(c(1, 2, 3, 4), ncol = 1))
 
 
 kergp::coef(product.kernel)
+
+
+rt <- makeRegrTask("test",
+  data.frame(x = 1 / ((-3:3) + 0.5), y = (-3:3)^2/100 + sin(-3:3)),
+  target = "y")
+
+gpone <- makeLearner("regr.kernel.gp", special.kernel = kMatern(d = 2, nu = "3/2"), special.kernel.features = character(0), default.kernel = "matern3_2", predict.type = "se", multistart = 1, noise = TRUE)
+
+
+devtools::load_all("..")
+debugonce(kergp::gp)
+gpmod <- train(gpone, rt)
+
+gpmod <- train(gpone, bhx)
+kmmod <- train(kmlrn, bhx)
+
+gpmod$learner.model
+
+kmmod$learner.model
+
+kmmod$learner.model@covariance@sd2
+
+kmmod <- train(kmlrn, rt)
+
+X <- seq(min(rt$env$data$x), max(rt$env$data$x), length.out = 234)
+prg <- predict(gpmod, newdata = data.frame(x = X))
+plot(X, prg$data$response, type = "l", ylim = c(-1, 1))
+points(rt$env$data$x, rt$env$data$y)
+lines(X, prg$data$response + prg$data$se, type = "l")
+lines(X, prg$data$response - prg$data$se, type = "l")
+prk <- predict(kmmod, newdata = data.frame(x = X))
+lines(X, prk$data$response, type = "l", col = "red")
+lines(X, prk$data$response + prk$data$se, type = "l", col = "red")
+lines(X, prk$data$response - prk$data$se, type = "l", col = "red")
+
+gpmod$learner.model$logLik
+kmmod$learner.model@logLik
+
+gpmod$learner.model
+kmmod$learner.model
+
+
+
+plot(prk$data$response - prg$data$response)
+plot(prk$data$se - prg$data$se)
+
+
+predict(gpmod$learner.model, newdata = data.frame(x = 0), forceInterp = TRUE)
+predict(gpmod$learner.model, newdata = data.frame(x = 0), forceInterp = FALSE)
+predict(gpmod$learner.model, newdata = data.frame(x = 0), forceInterp = TRUE)$sd^2 - predict(gpmod$learner.model, newdata = data.frame(x = 0), forceInterp = FALSE)$sd^2
+gpmod$learner.model$varNoise
+
+
+prgfull <- predict(gpmod$learner.model, newdata = data.frame(x = X + 0*rnorm(length(X), 0, 1e-7)), forceInterp = TRUE)
+
+names(prgfull)
+
+prkfull <- predict(kmmod$learner.model, newdata = data.frame(x = X + rnorm(length(X), 0, 1e-7)), type = "SK")
+
+names(prkfull)
+
+plot(prgfull$sd + gpmod$learner.model$varNoise - prkfull$sd)
+
+str(prgfull)
+str(prkfull)
+
+
+# optim method 'gen' in dicekriging:
+# - pop.size min(20, floor(4 + 3 * log( [ncol(design)] )))
+# - max.generations 5
+# - wait.generations 2
+# - BFGSburnin 0
+# - trace 1
+#
+# rgenoud:
+# - fn: fn ???
+# - nvars: length(parinit)
+# - max, starting.values, Domains: cbind(lower, upper)
+# - gr: gr
+# - gradient.check FALSE
+# - boundary.enforcement 2
+# - hessian TRUE
+# - optim.method L-BFGS-B
+# - model: model
+# - envir: envir
+
+storedLogLikGrad <- function(par) {
+  our.par <- gradEnv$par
+  if (!all.equal(par, our.par)) stop("bad par")
+  gradEnv$LLgrad
+}
+
+
+
+opt <- try(rgenoud::genoud(
+  fn = negLogLikFun,
+  nvars = length(parNames),
+  max = FALSE,
+  pop.size = min(20, floor(5 + 3 * log(NVARS))),
+  max.generations = 6,
+  wait.generations = 3,
+  hard.generation.limit = TRUE,
+  starting.values = parIni,
+  Domains = cbind(parLower, parUpper),
+  gr = thisLogLikGrad,
+  boundary.enforcement = 2,
+  gradient.check = FALSE,
+  optim.method = "L-BFGS-B",
+  trace = 1,
+  BFGSburnin = 0), silent = TRUE)
+
+
+
