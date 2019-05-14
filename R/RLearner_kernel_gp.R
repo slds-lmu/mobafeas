@@ -62,6 +62,7 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     vni <- min(maxvar, max(0, savevarenv$vni %??% (maxvar / 10)))
   } else {
     cat("Not using saved vars\n")
+    kergp::coef(product.kernel) <- pmin(coefUpper(product.kernel), pmax(coefLower(product.kernel), kergp::coef(product.kernel)))
     vni <- maxvar / 10
   }
 
@@ -78,8 +79,10 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     if (parTrack) {
       gradEvn$parTracked <- rbind(gradEnv$parTracked, par)
     }
-    .logLikFun0(par, object, y = thisy, X, F = thisF, compGrad = compGrad,
+    ret <- .logLikFun0(par, object, y = thisy, X, F = thisF, compGrad = compGrad,
       noise = noise, gradEnv = gradEnv, trace = trace)
+    if (!is.finite(ret)) ret <- -1e200
+    ret
   }
 
   storedLogLikGrad <- function(par) {
@@ -91,15 +94,20 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
           paste(sprintf('%.3g', par), collapse = ', '),
           paste(sprintf('%.3g', our.par), collapse = ', ')))
       par <- pmin(parUpper, pmax(parLower, par))
-      .logLikFun0(par, object, y = thisy, X, F = thisF, compGrad = compGrad,
+      val <- .logLikFun0(par, object, y = thisy, X, F = thisF, compGrad = compGrad,
         noise = noise, gradEnv = gradEnv, trace = trace)
-      our.par <- gradEnv$par
-      reldiff <- max(abs( ifelse(par == our.par, 0, par - our.par) / max(par + our.par, 1e-5) ))
-      if (!isTRUE(1e-4 > reldiff)) {
-        stop(sprintf('After Reeval: %.3g\nrequested: (%s)\npresent:   (%s)',
-            reldiff,
-            paste(sprintf('%.3g', par), collapse = ', '),
-            paste(sprintf('%.3g', our.par), collapse = ', ')))
+      if (!is.finite(val) || val <= -1e200) {
+        # gradEnv$LLgrad <- gradEnv$LLgrad * NA  # crashes the optimizer
+        gradEnv$LLgrad <- gradEnv$LLgrad * 0
+      } else {
+        our.par <- gradEnv$par
+        reldiff <- max(abs( ifelse(par == our.par, 0, par - our.par) / max(par + our.par, 1e-5) ))
+        if (!isTRUE(1e-4 > reldiff)) {
+          stop(sprintf('After Reeval: %.3g\nrequested: (%s)\npresent:   (%s)',
+              reldiff,
+              paste(sprintf('%.3g', par), collapse = ', '),
+              paste(sprintf('%.3g', our.par), collapse = ', ')))
+        }
       }
     }
     gradEnv$LLgrad
@@ -127,7 +135,7 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
 # cluster = Ldots$cluster)
   res <- kergp::gp(form, data = data, cov = product.kernel, optimCode = opt.code, varNoiseIni = vni, ...)
   savevarenv$vni <- res$varNoise
-  savevarenv$savedvars <- kergp::coef(gptrn$learner.model$covariance)
+  savevarenv$savedvars <- kergp::coef(res$covariance)
   res
 }
 

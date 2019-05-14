@@ -1,3 +1,4 @@
+# MO Bayesian Optimization for Feature Selection
 
 
 library("mlr")
@@ -71,7 +72,17 @@ res <- collectMBFResult(optstate)
 
 library("ggplot2")
 
-ggplot(res, aes(x = perf, y = propfeat, color = dob)) + geom_point()
+
+res$run <- "gp"
+res.naive$run <- "naive"
+
+
+res
+
+ggplot(rbind(res, res.naive), aes(x = perf, y = propfeat, color = run)) + geom_point()
+ggplot(rbind(res, res.naive), aes(x = dob, y = train.time, color = run)) + geom_point()
+ggplot(rbind(res, res.naive), aes(x = dob, y = naive.hout.domHV, color = run)) + geom_point()
+
 ggplot(res, aes(x = perf, y = propfeat, color = InfillEI)) + geom_point()
 
 
@@ -91,6 +102,8 @@ extras
 yval
 
 library("kergp")
+
+
 
 kern.hamming <- function(f1, f2, par) {
   K <- exp(-sum(abs((f1 - f2) * par)))
@@ -354,4 +367,81 @@ opt <- try(rgenoud::genoud(
   BFGSburnin = 0), silent = TRUE)
 
 
+
+# ---------------------------------------------------------------
+
+objective <- makeMobafeasObjective(makeLearner("classif.knn"), pid.task, pSS(k: integer[1, 30]), cv10, holdout.data = pid.task)
+ps.objective <- getParamSet(objective)
+
+mutator.simple <- combine.operators(ps.objective,
+  numeric = ecr::setup(mutGauss, sdev = 0.1),
+  integer = ecr::setup(mutGaussInt, sdev = 3),
+  selector.selection = mutBitflipCHW)
+
+crossover.simple <- combine.operators(ps.objective,
+  numeric = recPCrossover,
+  integer = recPCrossover,
+  selector.selection = recPCrossover)
+
+
+mosmafs.config <- MosmafsConfig(mutator.simple, crossover.simple, 10)
+
+ctrl <- makeMBFControl(mosmafs.config) %>%
+  setMBOControlTermination(100)
+
+pop <- sampleValues(ps.objective, 10)
+
+optstate.naive <- mobafeasMBO(objective, population = pop, control = ctrl)
+
+optstate <- mobafeasMBO(objective, population = pop, control = ctrl,
+  learner = constructMBFLearner(ps.objective, kernelMBFHamming))
+
+optstate.nows <- mobafeasMBO(objective, population = pop, control = ctrl,
+  learner = constructMBFLearner(ps.objective, kernelMBFHamming))
+
+
+res <- collectMBFResult(optstate)
+res.nows <- collectMBFResult(optstate.nows)
+res.naive <- collectMBFResult(optstate.naive)
+
+res$run <- "res"
+res.nows$run <- "nows"
+res.naive$run <- "naive"
+
+library("ggplot2")
+data <- rbind(res, res.nows, res.naive)
+
+ggplot(data, aes(x = perf, y = propfeat, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = train.time, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = propose.time, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = naive.hout.domHV, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = true.hout.domHV, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = true.hout.domHV, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = propose.time, color = run)) + geom_point()
+head(data)
+
+checkGrad(kernelMBFHamming(3))
+
+
+# --------------------------------------------------------------
+
+     myCovMan <-
+           covMan(
+              kernel = function(x1, x2, par) {
+              htilde <- (x1 - x2) / par[1]
+              SS2 <- sum(htilde^2)
+              d2 <- exp(-SS2)
+              kern <- par[2] * d2
+              d1 <- 2 * kern * SS2 / par[1]
+              attr(kern, "gradient") <- c(theta = d1,  sigma2 = d2)
+              return(kern)
+           },
+           hasGrad = TRUE,
+           d = 1,
+           label = "myGauss",
+           parLower = c(theta = 0.0, sigma2 = 0.0),
+           parUpper = c(theta = Inf, sigma2 = Inf),
+           parNames = c("theta", "sigma2"),
+           par = c(1, 2)
+           )
 
