@@ -27,6 +27,39 @@ makeMBOResult = function(design, ninit = NULL, p) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 fitnesses <- function(results) {
   pops <- getPopulations(results$log)
   do.call(rbind, lapply(seq_along(pops), function(idx) {

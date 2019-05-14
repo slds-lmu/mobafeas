@@ -1,6 +1,5 @@
 import subprocess
 import numpy as np
-import matplotlib.pyplot as plt
 
 from BOCS import BOCS
 from quad_mat import quad_mat

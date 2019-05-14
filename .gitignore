@@ -19,3 +19,5 @@ vignettes/*.html
 *.rds
 *.Rproj
 *.arff
+registry_test
+BOCS

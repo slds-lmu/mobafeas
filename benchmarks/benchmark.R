@@ -39,27 +39,35 @@ if (TEST) {
     }
 }
 
+readDataAndRinst = function(data, job, rinst.iter, ...) {
+  task = readRDS(file.path(data, "task.rds"))
+  rin = readRDS(file.path(data, "rin.rds"))
 
-# return the filepath for each 
-for (ds in datasets) {  
-  addProblem(name = ds, data = paste(datafolder, ds, sep = "/"), reg = reg)
+  train.task = subsetTask(task, rin$train.inds[[rinst.iter]])
+  test.task = subsetTask(task, rin$test.inds[[rinst.iter]])
+  
+  list(train.task = train.task, test.task = test.task)
 }
 
-source("algorithms/BOCS.R")
+# return the filepath for each 
+for (i in 1:length(datasets)) {  
+  addProblem(
+    name = names(datasets)[i], 
+    data = paste(datafolder, names(datasets)[i], sep = "/"), 
+    fun = readDataAndRinst,
+    reg = reg
+    )
+}
 
-source("algorithms/MBONaive.R")
+source("../algorithms/randomsearch_SO.R")
 
-source("algorithms/randomsearch.R")
-
-
-addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
-addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
-addAlgorithm(name = "MBONaive", reg = reg, fun = MBONaive)
+addAlgorithm(name = "randomsearch_SO", reg = reg, fun = randomsearch)
 
 addExperiments(reg = reg, 
-  algo.designs = list(BOCS = ades.BOCS, 
-    randomsearch = ades.randomsearch,
-    MBONaive = ades.mboNaive), 
+  prob.designs = pdes,
+  algo.designs = list(#BOCS = ades.BOCS, 
+    randomsearch = ades.randomsearch),
+    #MBONaive = ades.mboNaive), 
   repls = REPLICATIONS)
 
 

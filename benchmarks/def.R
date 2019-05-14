@@ -3,7 +3,7 @@
 packages = c("batchtools", "ecr", "magrittr", "mosmafs", "ParamHelpers", "mlr", "mlrCPO", "mlrMBO")
 
 # source the prob design
-source("probdesign.R")
+source("../probdesign.R")
 
 OVERWRITE = FALSE
 
@@ -13,8 +13,7 @@ datafolder = "data"
 OVERWRITE = FALSE
 
 # Maximum number of evaluations allowed
-# TODO: 2000 sufficient?
-MAXEVAL = 4000L
+MAXEVAL = 1000L
 
 # Infill optimizer
 
@@ -22,33 +21,22 @@ MAXEVAL = 4000L
 # Infill crit
 INFILL = list("cb" = makeMBOInfillCritCB())
 
-
 # Surrogate
 SURROGATE = list(randomForest = cpoImputeConstant("__MISSING__") %>>% makeLearner("regr.randomForest", se.method = "jackknife", keep.inbag = TRUE, predict.type = "se"),
 	              km.nugget = cpoDummyEncode() %>>% makeLearner("regr.km", predict.type = "se", par.vals = list(nugget.estim = TRUE, nugget.stability = 10e-8))
 )
 
 
+pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
+names(pdes) = names(datasets)
+
 ades.BOCS = list()
 
-ades.SMAC = list()
-
-# TODO: discuss with martin what we will test
-# Different kernels? 
-ades.mobafeas = list()
-
-# We get random search for free
 ades.random = list()
 
-# We get mosmafs for free
-ades.mosmafs = list()
-
-# TODO: need to check how we get there
-ades.graphs = list()
-
+ades.MBOnaive = list()
 
 REPLICATIONS = 10L
-
 
 # ades.random = CJ(learner = c("SVM", "kknn", "xgboost"), 
 # 			maxeval = MAXEVAL, 
