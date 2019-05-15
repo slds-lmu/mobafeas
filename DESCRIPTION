@@ -26,10 +26,10 @@ Imports:
   mlr,
   parallelMap,
   rgenoud,
+  magrittr,
   ecr
 Suggests:
   knitr,
-  magrittr,
   testthat,
   praznik,
   class
