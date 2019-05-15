@@ -23,12 +23,14 @@ first model is considered.}
 \item{designs}{\code{[list of data.frame]} data.frame of results so far}
 
 \item{iter}{\code{[integer(1)]} iteration number. Ignored.}
+
+\item{...}{ignored}
 }
 \value{
 \code{data.frame} of suggested point to evaluate.
 }
 \description{
-Uses \code{\link[mosmafs:mosmafs-package]{mosmafs::mosmafs-package}} to perform infill optimization. The infill criteria are not
+Uses the \code{mosmafs} package to perform infill optimization. The infill criteria are not
 the ones from \code{mlrMBO}, but instead the ones given by an \code{\link{Infill}} object.
 
 This function should probably not be called directly, but instead should be given to \code{mlrMBO::mbo}
