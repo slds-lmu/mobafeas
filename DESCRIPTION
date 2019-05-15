@@ -34,5 +34,5 @@ Suggests:
 Remotes:
   jakobbossek/ecr2,
   mb706/kergp,
-  compstat-lmu/mosmafs
+  compstat-lmu/mosmafs@mosmafs-package
 RoxygenNote: 6.1.1

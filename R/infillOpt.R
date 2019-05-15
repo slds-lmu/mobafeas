@@ -45,7 +45,7 @@ infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, d
     }) %>% setMosmafsVectorized()
 
   opt <- do.call(slickEcr, ecrcall)
-  mosmafs:::listToDf(opt$best.x, par.set)
+  listToDf(opt$best.x, par.set)
 }
 
 #' @title Mosmafs Configuration Object

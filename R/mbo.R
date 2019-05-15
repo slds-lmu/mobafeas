@@ -32,11 +32,11 @@ mobafeasMBO <- function(fun, population, learner = constructMBFLearner(getParamS
   control$nadir <- attr(fun, "nadir")
   assertNumeric(control$nadir, any.missing = FALSE, len = 2)
 
-  mbo(fun = fun, design = mosmafs:::listToDf(population, ps), learner = learner, control = control, show.info = show.info, more.args = more.args)
+  mbo(fun = fun, design = listToDf(population, ps), learner = learner, control = control, show.info = show.info, more.args = more.args)
   ## ymatrix <- sapply(population, function(v) {
   ##   trafoValue(ps, v) %>% valuesFromNames(paramset = ps) %>% fun
   ## })
   ## rownames(ymatrix) <- ctrl$y.name
-  ## design <- cbind(mosmafs:::listToDf(population, ps), t(ymatrix))
+  ## design <- cbind(listToDf(population, ps), t(ymatrix))
   ## initSMBO(par.set = getParamSet(fun), design = design, learner = learner, control = control, show.info = show.info)
 }
