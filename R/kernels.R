@@ -5,6 +5,8 @@
 #' Kernels defined on the space of possible feature selections. These should be run, possibly with
 #' arguments, and the result given to `constructMBFLearner()`.
 #'
+#' @param limit.par `[logical(1)]` Whether to limit the parameter value range
+#' @param data `[matrix | data.frame | Task]` the data to use.
 #' @rdname Kernel
 #' @export
 kernelMBFHamming <- function() function(d) {
@@ -18,4 +20,55 @@ kernelMBFHamming <- function() function(d) {
   parUpper = -log(1e-8 / d),
   par = 1 / d,
   parNames = "theta")
+}
+
+#' @rdname Kernel
+#' @export
+kernelMBFGraph <- function(allequal = TRUE) function(d) {
+
+
+
+}
+
+#' @rdname Kernel
+#' @export
+kernelMBFAgreement <- function(limit.par = FALSE) function(d) {
+  covMan(function(f1, f2, par) {
+    disagreement <- mean(abs(f1 - f2))
+    K <- 1 - disagreement * par
+    attr(K, "gradient") <- -disagreement
+    K
+  }, TRUE, d = d,
+  parLower = 0,
+  parUpper = if (limit.par) 1 else Inf,
+  par = 1,
+  parNames = "theta")
+}
+
+#' @rdname Kernel
+#' @export
+kernelMBFAgreeCor <- function(data, limit.par = FALSE) function(d) {
+  assert(
+    checkMatrix(data),
+    checkDataFrame(data),
+    checkClass(data, "Task")
+  )
+  if (inherits(data, "Task")) {
+    data <- getTaskData(data, target.extra = TRUE)$data
+  }
+  cormat <- abs(cor(data))
+  assertMatrix(cormat, any.missing = FALSE)
+  covMan(function(f1, f2, par) {
+    subcor <- cormat[as.logical(f1), as.logical(f2)]
+    disagreement <- (sum(1 - apply(subcor, 1, max)) + sum(1 - apply(subcor, 2, max))) / d
+    K <- 1 - disagreement * par
+    attr(K, "gradient") <- -disagreement
+    K
+  }, TRUE, d = d,
+  parLower = 0,
+  parUpper = if (limit.par) 1 else Inf,
+  par = 1,
+  parNames = "theta")
+
+
 }
