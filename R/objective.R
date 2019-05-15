@@ -40,6 +40,8 @@
 #'   two inputs `performance`, `featfrac` that computes a scalarized objective. The scalarized
 #'   objective must always be minimized.
 #' @return `function` an objective function for [`mlrMBO::mlr`].
+#'
+#' @family Control Objects
 #' @export
 makeMobafeasObjective <- function(learner, task, ps = pSS(), resampling, measure = NULL, holdout.data = NULL, worst.measure = NULL, cpo = NULLCPO, multi.objective = TRUE) {
 

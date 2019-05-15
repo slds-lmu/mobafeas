@@ -1,7 +1,19 @@
-
-
-
-
+#' @title Collect Result Information
+#'
+#' @description
+#' Collect the `MBOSingleObjResult` information for a complete `data.frame`
+#' with information about progress (both on training data and on
+#' holdout data) and ressource usage.
+#'
+#' @param opt.state `[MBOSingleObjResult]` `mobafeasMBO()` result to analyse
+#' @param aggregate.perresult `[list]` list of functions
+#'   to apply to fitness and holdout fitness. Every entry must either be
+#'   a `character(1)` naming the function to use, or a function, in which
+#'   that entry must have a name. Each function must return exactly one
+#'   numeric value when fed a fitness matrix of one generation.
+#' @param ref.point `[numeric(2)]` reference point to use for HV computation
+#' @return `data.frame`
+#' @export
 collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = function(x) computeHV(x, ref.point)), ref.point = opt.state$control$nadir) {
   normalize.funlist <- function(fl) {
     assertList(fl, any.missing = FALSE, types = c("function",

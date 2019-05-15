@@ -396,6 +396,12 @@ pop <- sampleValues(ps.objective, 10)
 
 optstate.naive <- mobafeasMBO(objective, population = pop, control = ctrl)
 
+optstate.our.naive <- mobafeasMBO(objective, population = pop, control = ctrl,
+  learner = constructMBFLearner(ps.objective))
+
+optstate.rf <- mobafeasMBO(objective, population = pop, control = ctrl,
+  learner = constructRFSurrogate())
+
 optstate <- mobafeasMBO(objective, population = pop, control = ctrl,
   learner = constructMBFLearner(ps.objective, kernelMBFHamming))
 
@@ -408,6 +414,8 @@ optstate.scalarized <- mobafeasMBO(objective.scalarized, population = pop, contr
 
 res <- collectMBFResult(optstate)
 res.naive <- collectMBFResult(optstate.naive)
+res.our.naive <- collectMBFResult(optstate.our.naive)
+res.rf <- collectMBFResult(optstate.rf)
 res.singleobj <- collectMBFResult(optstate.singleobj)
 res.scalarized <- collectMBFResult(optstate.scalarized)
 
@@ -415,12 +423,14 @@ res.scalarized <- collectMBFResult(optstate.scalarized)
 
 res$run <- "res"
 res.naive$run <- "naive"
+res.our.naive$run <- "our.naive"
+res.rf$run <- "rf"
 res.singleobj$run <- "singleobj"
 res.scalarized$run <- "scalarized"
 
 
 library("ggplot2")
-data <- rbind(res, res.naive, res.singleobj, res.scalarized)
+data <- rbind(res, res.naive, res.our.naive, res.rf, res.singleobj, res.scalarized)
 
 ggplot(data, aes(x = perf, y = propfeat, color = run)) + geom_point()
 
@@ -429,6 +439,8 @@ ggplot(data, aes(x = dob, y = propfeat, color = run)) + geom_point()
 ggplot(data, aes(x = perf, y = untransformed.val, color = run)) + geom_point()
 ggplot(data, aes(x = perf, y = untransformed.val + propfeat, color = run)) + geom_point()
 
+
+ggplot(data, aes(x = untransformed.val, y = propfeat, color = run)) + geom_point()
 
 res.singleobj
 
