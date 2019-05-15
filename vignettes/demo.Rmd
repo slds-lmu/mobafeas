@@ -187,13 +187,13 @@ Optimization runs are started using the `mobafeasMBO()` call.
 ```{r, results = "hide"}
 opt.so <- mobafeasMBO(objective.so, initials, surrogate, ctrl, show.info = FALSE)
 ```
-```{r, results = "hide")
+```{r, results = "hide"}
 opt.mo <- mobafeasMBO(objective.mo, initials, surrogate, ctrl, show.info = FALSE)
 ```
-```{r, results = "hide")
+```{r, results = "hide"}
 opt.sc <- mobafeasMBO(objective.sc, initials, surrogate, ctrl, show.info = FALSE)
 ```
-```{r, results = "hide")
+```{r, results = "hide"}
 opt.joint.mo <- mobafeasMBO(objective.joint.mo, initials.joint, surrogate.joint,
   ctrl.joint, show.info = FALSE)
 ```
