@@ -8,5 +8,5 @@
 #' @import stats
 #' @import mosmafs
 #' @import kergp
-#' @importFrom ecr2 computeHV
+#' @importFrom ecr computeHV
 NULL
