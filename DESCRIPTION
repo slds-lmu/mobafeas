@@ -24,7 +24,8 @@ Imports:
   mlrCPO (>= 0.3.4),
   mosmafs,
   mlr,
-  parallelMap
+  parallelMap,
+  rgenoud
 Suggests:
   knitr,
   magrittr,
