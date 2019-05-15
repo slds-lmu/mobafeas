@@ -14,7 +14,7 @@
 #' @family Surrogate Models
 #' @export
 constructMBFLearner <- function(par.set, kernelconstructor = NULL, default.kernel = "matern3_2") {
-  selectorfeatures <- getParamIds(ps.objective$pars$selector.selection, repeated = TRUE, with.nr = TRUE)
+  selectorfeatures <- getParamIds(par.set$pars$selector.selection, repeated = TRUE, with.nr = TRUE)
   makeLearner("regr.kernel.gp", special.kernel = if (!is.null(kernelconstructor)) kernelconstructor(length(selectorfeatures)),
     special.kernel.features = if (is.null(kernelconstructor)) character(0) else selectorfeatures,
     default.kernel = default.kernel, predict.type = "se",

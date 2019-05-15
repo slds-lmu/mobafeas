@@ -17,6 +17,7 @@ library("mlr")
 library("mlrCPO")
 
 library("mlrMBO")
+library("mosmafs")
 library("mobafeas")
 
 library("magrittr")
@@ -150,8 +151,8 @@ mosmafs.joint.config <- MosmafsConfig(mutator.joint.simple,
 The surrogate model being optimized can, in prinziple, be any [`mlr`](https://github.com/mlr-org/mlr) `Learner` that performs `"se"` prediction (i.e. predicts a value and its estimated uncertainty). It is recommended to use either the `randomForest` model (recommended settings are conveniently provided by the `constructRFSurrogate()` function), or a Gaussian Process. `constructMBFLearner()` constructs a Gaussian Process Learner (from the [`kergp`](https://cran.r-project.org/package=kergp) package; note it is highly recommended to use the [modified version provided by the MoBaFeaS package authors](https://github.com/mb706/kergp)) with a special kernel for the feature selection part. Use the `kernelMBF*()` functions to define this kernel. The hyperparameter kernel can be a Matern 5/2, Matern 3/2, Exponential or Gaussian kernel. Our Example uses the Hamming distance kernel for the feature configuration vector and the (default) Matern 3/2 kernel for the hyperparameters.
 
 ```{r}
-surrogate <- constructMBFLearner(ps.obj, kernelMBFHamming)
-surrogate.joint <- constructMBFLearner(ps.joint.obj, kernelMBFHamming)
+surrogate <- constructMBFLearner(ps.obj, kernelMBFHamming())
+surrogate.joint <- constructMBFLearner(ps.joint.obj, kernelMBFHamming())
 ```
 
 ### MoBaFeaS Run Configuration
@@ -168,16 +169,27 @@ ctrl.joint <- makeMBFControl(mosmafs.joint.config) %>%
   setMBOControlTermination(10)
 ```
 
+### Initial Population
+
+The initial design matrix for which to evaluate individuals is given to `mobafeasMBO()` in form of a list of individuals. These individuals can be generated the same way as in `mosmafs`: Using the `ParamHelpers::sampleValues()` function, aided by the `mosmafs::initSelector()` function.
+
+```{r}
+initials <- sampleValues(ps.obj, 10, discrete.names = TRUE) %>%
+  initSelector()
+initials.joint <- sampleValues(ps.joint.obj, 10, discrete.names = TRUE) %>%
+  initSelector()
+```  
+
 ### Running Optimization
 
 Optimization runs are started using the `mobafeasMBO()` call.
 
-```{r}
-opt.so <- mobafeasMBO(objective.so, , surrogate, ctrl, show.info = FALSE)
-opt.mo <- mobafeasMBO(objective.mo, , surrogate, ctrl, show.info = FALSE)
-opt.sc <- mobafeasMBO(objective.sc, , surrogate, ctrl, show.info = FALSE)
-opt.joint.mo <- mobafeasMBO(objective.joint.mo, , surrogate.joint, ctrl.joint,
-  show.info = FALSE)
+```{r, results = "hide"}
+opt.so <- mobafeasMBO(objective.so, initials, surrogate, ctrl, show.info = FALSE)
+opt.mo <- mobafeasMBO(objective.mo, initials, surrogate, ctrl, show.info = FALSE)
+opt.sc <- mobafeasMBO(objective.sc, initials, surrogate, ctrl, show.info = FALSE)
+opt.joint.mo <- mobafeasMBO(objective.joint.mo, initials.joint, surrogate.joint,
+  ctrl.joint, show.info = FALSE)
 ```
 
 ### Analysing Results
