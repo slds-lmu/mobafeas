@@ -5,28 +5,12 @@ infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, d
 
   infill.crit <- attr(infill.crit, "infill.crit.object")
 
-  # --- TODO: this is the same as in as.MBOInfillCrit.Infill in InfillCrits.R
-  model <- models[[1]]
-  design <- designs[[1]]
-  design.X <- design
-  design.X[[control$y.name]] <- NULL
-  pointdata <- predict(object = model, newdata = design.X)$data[c("response", "se")]
-  pointdata$value <- design[[control$y.name]]
-  pointdata$c2 <- apply(design.X[grepl("^selector\\.selection[0-9]+$", colnames(design.X))], 1, mean)
-  popmatrix <- rbind(pointdata$value, pointdata$c2)
-  paretofront <- popmatrix[, ecr::nondominated(popmatrix), drop = FALSE]
-  paretofront <- paretofront[, order(paretofront[2, ]), drop = FALSE]
-  nugget <- model$nugget # TODO
-  # --- TODO end
+  population.info <- computePopulationInfo(models[[1]], designs[[1]], control)
 
   par.set$pars <- lapply(par.set$pars, function(x) {
     x$trafo <- NULL
     x
   })
-
-  nadir <- c(Inf, 1)
-
-
 
   ecrcall <- control$mosmafs
 
@@ -37,9 +21,9 @@ infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, d
   ecrcall$fitness.fun <- smoof::makeSingleObjectiveFunction("infillopt", has.simple.signature = FALSE, par.set = par.set,
     noisy = TRUE, fn = function(args) {
       newdesign <- convertDataFrameCols(args, ints.as.num = TRUE, logicals.as.factor = TRUE)
-      suggestions <- predict(object = model, newdata = newdesign)$data[c("response", "se")]
-      suggestions$c2.value <- apply(newdesign[grepl("^selector\\.selection[0-9]+$", colnames(newdesign))], 1, mean)
-      -acquisition(infill.crit, suggestions, nadir, paretofront, pointdata, nugget)
+      suggestions <- predict(object = models[[1]], newdata = newdesign)$data[c("response", "se")]
+      suggestions$c2.value <- control$co.objective(newdesign)
+      -acquisition(infill.crit, suggestions, population.info)
     }) %>% setMosmafsVectorized()
 
   opt <- do.call(slickEcr, ecrcall)
@@ -68,3 +52,17 @@ MosmafsConfig <- function(mutator, recombinator, generations, mu = 80, lambda = 
   makeConfigObject("MosmafsConfig")
 }
 
+
+computePopulationInfo <- function(model, design, control) {
+  design.X <- design
+  design.X[[control$y.name]] <- NULL
+  pointdata <- predict(object = model, newdata = design.X)$data[c("response", "se")]
+  pointdata$value <- design[[control$y.name]]
+  pointdata$c2 <- control$co.objective(design.X)
+  popmatrix <- rbind(pointdata$value, pointdata$c2)
+  paretofront <- popmatrix[, ecr::nondominated(popmatrix), drop = FALSE]
+  paretofront <- paretofront[, order(paretofront[2, ]), drop = FALSE]
+  nugget <- model$learner.model$varNoise # TODO
+
+  list(pointdata = pointdata, paretofront = paretofront, nugget = nugget, nadir = control$nadir)
+}
