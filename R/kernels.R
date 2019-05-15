@@ -25,9 +25,19 @@ kernelMBFHamming <- function() function(d) {
 #' @rdname Kernel
 #' @export
 kernelMBFGraph <- function(allequal = TRUE) function(d) {
-
-
-
+  repno <- if (allequal) 1 else d
+  parnames <- if (allequal) "beta" else sprintf("beta%s", seq_len(d))
+  covMan(function(f1, f2, par) {
+    K <- prod(ifelse(f1 == f2, (exp(-2 * par) + 1) / 2, -expm1(-2 * par) / 2))
+    gradmul <- ifelse(f1 == f2, -2 / (1 + exp(2 * par)), 2 / expm1(2 * par))
+    if (length(par) == 1) gradmul <- sum(gradmul)
+    attr(K, "gradient") <- K * gradmul
+    K
+  }, TRUE, d = d,
+  parLower = rep(0, repno),
+  parUpper = rep(-log(1e-8 / d), repno),
+  par = rep(1/d, repno),
+  parNames = parnames)
 }
 
 #' @rdname Kernel
