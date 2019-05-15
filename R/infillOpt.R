@@ -2,7 +2,7 @@
 #' @title MOSMAFS-based Multi-Crit Infill-Optimization
 #'
 #' @description
-#' Uses [`mosmafs::mosmafs-package`] to perform infill optimization. The infill criteria are not
+#' Uses the `mosmafs` package to perform infill optimization. The infill criteria are not
 #' the ones from `mlrMBO`, but instead the ones given by an [`Infill`] object.
 #'
 #' This function should probably not be called directly, but instead should be given to `mlrMBO::mbo`
@@ -17,6 +17,7 @@
 #' @param opt.path `[OptPath]` OptPath of results so far
 #' @param designs `[list of data.frame]` data.frame of results so far
 #' @param iter `[integer(1)]` iteration number. Ignored.
+#' @param ... ignored
 #' @return `data.frame` of suggested point to evaluate.
 #' @export
 infillOptMobafeas <- function(infill.crit, models, control, par.set, opt.path, designs, iter, ...) {

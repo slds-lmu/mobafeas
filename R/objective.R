@@ -73,7 +73,7 @@ makeMobafeasObjective <- function(learner, task, ps = pSS(), resampling, measure
     }
   }
   worst.measure <- trafo.fun(worst.measure, 1)
-  ps <- c(ps, pSS(selector.selection:integer[0, 1]^getTaskNFeats(task)))
+  ps <- c(ps, pSS(selector.selection = NA:integer[0, 1]^getTaskNFeats(task)))
   learner <- cpoSelector() %>>% checkLearner(learner, type = getTaskType(task))
   learner %<<<% cpo
   argnames <- getParamIds(getParamSet(learner))
