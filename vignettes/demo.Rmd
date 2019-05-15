@@ -108,7 +108,7 @@ Because MoBaFeaS uses model-based optimization, it is necessary to specify the i
 
 Note that the parameter set on which the operators are defined is the parameter set of the objective, *not* the parameter set of the learner given to `makeMobafeasObjective`. This is because `makeMobafeasObjective` adds the `selector.selection` parameter.
 
-In the following example, all parameter sets for `objective.*` happen to be identical save the `objective.joint.mo` one (because it includes the `k` parameter). Therefore, our examples only need two mosmafs configuration objects 
+In the following example, all parameter sets for `objective.*` happen to be identical save the `objective.joint.mo` one (because it includes the `k` parameter). Therefore, our examples only need two mosmafs configuration objects
 
 ```{r}
 ps.obj <- getParamSet(objective.so)
@@ -178,7 +178,7 @@ initials <- sampleValues(ps.obj, 10, discrete.names = TRUE) %>%
   initSelector()
 initials.joint <- sampleValues(ps.joint.obj, 10, discrete.names = TRUE) %>%
   initSelector()
-```  
+```
 
 ### Running Optimization
 
@@ -186,8 +186,14 @@ Optimization runs are started using the `mobafeasMBO()` call.
 
 ```{r, results = "hide"}
 opt.so <- mobafeasMBO(objective.so, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide")
 opt.mo <- mobafeasMBO(objective.mo, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide")
 opt.sc <- mobafeasMBO(objective.sc, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide")
 opt.joint.mo <- mobafeasMBO(objective.joint.mo, initials.joint, surrogate.joint,
   ctrl.joint, show.info = FALSE)
 ```
