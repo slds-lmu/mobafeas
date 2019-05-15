@@ -26,7 +26,7 @@ Imports:
   mlr,
   parallelMap,
   rgenoud,
-  ecr2
+  ecr
 Suggests:
   knitr,
   magrittr,
