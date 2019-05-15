@@ -18,16 +18,16 @@ acquisition(infobj, suggestions, population.info)
 
 \item{population.info}{\code{[list]} with elements:\
 \itemize{
-\item \code{$nadir} \code{\link{numeric(2)}} nadir point.\
-\item \code{paretofront} \code{\link{matrix}} pareto front of values seen so far: one column per individuum, two rows\
+\item \code{$nadir} \code{[numeric(2)]} nadir point.\
+\item \code{paretofront} \code{[matrix]} pareto front of values seen so far: one column per individuum, two rows\
 where the first row is the modeled one and the second row is the known one. Columns should be ordered
 by second row increasing.
-\item \code{$pointdata} \code{\link{data.frame}} points known so far, with columns value, response, se, c2.value\
-\item \code{$nugget} \code{\link{numeric(1)}} model nugget
+\item \code{$pointdata} \code{[data.frame]} points known so far, with columns value, response, se, c2.value\
+\item \code{$nugget} \code{[numeric(1)]} model nugget
 }}
 }
 \value{
-\code{\link{numeric}} vector of length \code{nrow(suggestions)} indicating desirability of each point. Larger values are better.
+\code{[numeric]} vector of length \code{nrow(suggestions)} indicating desirability of each point. Larger values are better.
 }
 \description{
 Acquisition Function
@@ -38,7 +38,7 @@ If this is not the case, the criterion can be converted to an \code{MBOInfillCri
 \code{as.MBOInfillCrit()} and then executed directly.
 }
 \seealso{
-Other Infill Criteria: \code{\link{InfillCB}},
+Other Infill Criteria: \code{\link{Infill}},
   \code{\link{as.MBOInfillCrit}}
 }
 \concept{Infill Criteria}

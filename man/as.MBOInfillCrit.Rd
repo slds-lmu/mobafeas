@@ -22,7 +22,7 @@ Necessary to use \code{mlrMBO::setMBOControlInfill()}.
 \seealso{
 Other Utility Functions: \code{\link{getNugget}}
 
-Other Infill Criteria: \code{\link{InfillCB}},
+Other Infill Criteria: \code{\link{Infill}},
   \code{\link{acquisition}}
 }
 \concept{Infill Criteria}

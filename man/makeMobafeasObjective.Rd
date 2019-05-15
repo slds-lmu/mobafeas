@@ -42,7 +42,7 @@ two inputs \code{performance}, \code{featfrac} that computes a scalarized object
 objective must always be minimized.}
 }
 \value{
-\code{function} an objective function for \code{\link[mlrMBO:mlr]{mlrMBO::mlr}}.
+\code{function} an objective function for \code{\link[mlrMBO:mbo]{mlrMBO::mbo}}.
 }
 \description{
 Create an objective function that resamples \code{learner} on \code{task}
