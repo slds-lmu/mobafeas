@@ -7,7 +7,10 @@
 #'
 #' @param limit.par `[logical(1)]` Whether to limit the parameter value range
 #' @param data `[matrix | data.frame | Task]` the data to use.
-#' @rdname Kernel
+#' @param allequal `[logical(1)]` Whether to generate one parameter per feature, or only one parameter
+#'   overall.
+#' @name Kernel
+#' @aliases kernelMBFHamming kernelMBFGraph kernelMBFAgreement kernelMBFAgreeCor
 #' @export
 kernelMBFHamming <- function() function(d) {
   covMan(function(f1, f2, par) {
@@ -79,6 +82,4 @@ kernelMBFAgreeCor <- function(data, limit.par = FALSE) function(d) {
   parUpper = if (limit.par) 1 else Inf,
   par = 1,
   parNames = "theta")
-
-
 }

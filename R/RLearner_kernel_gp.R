@@ -5,13 +5,13 @@ makeRLearner.regr.kernel.gp <- function() {
     cl = "regr.kernel.gp",
     package = c("kergp", "rgenoud"),
     par.set = pSSLrn(
-      default.kernel: discrete [matern5_2, matern3_2, gauss, exp],
-      special.kernel: untyped,
-      special.kernel.features: untyped,
+      default.kernel = NA: discrete [c("matern5_2", "matern3_2", "gauss", "exp")],
+      special.kernel = NA: untyped,
+      special.kernel.features = NA: untyped,
       noise = TRUE: logical,
-      print.level: integer[0, 2],
-      warmstart: logical,
-      savevarenv: untyped
+      print.level = NA: integer[0, 2],
+      warmstart = NA: logical,
+      savevarenv = NA: untyped
     ),
     par.vals = list(default.kernel = "matern5_2", savevarenv = new.env(parent = emptyenv()), print.level = 1, warmstart = TRUE),
     properties = c("numerics", "se"),

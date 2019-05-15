@@ -13,13 +13,13 @@
 #' @param infobj `[Infill]` The acquisition function object
 #' @param suggestions `[data.frame]` points to evaluate, with columns `"response"`, `"se"`, `"c2.value"`
 #' @param population.info `[list]` with elements:\\
-#'   - `$nadir` [`numeric(2)`] nadir point.\\
-#'   - `paretofront` [`matrix`] pareto front of values seen so far: one column per individuum, two rows\\
+#'   - `$nadir` `[numeric(2)]` nadir point.\\
+#'   - `paretofront` `[matrix]` pareto front of values seen so far: one column per individuum, two rows\\
 #'     where the first row is the modeled one and the second row is the known one. Columns should be ordered
 #'     by second row increasing.
-#'   - `$pointdata` [`data.frame`] points known so far, with columns value, response, se, c2.value\\
-#'   - `$nugget` [`numeric(1)`] model nugget
-#' @return [`numeric`] vector of length `nrow(suggestions)` indicating desirability of each point. Larger values are better.
+#'   - `$pointdata` `[data.frame]` points known so far, with columns value, response, se, c2.value\\
+#'   - `$nugget` `[numeric(1)]` model nugget
+#' @return `[numeric]` vector of length `nrow(suggestions)` indicating desirability of each point. Larger values are better.
 #' @family Infill Criteria
 #' @export
 acquisition <- function(infobj, suggestions, population.info) {
@@ -39,9 +39,10 @@ acquisition.default <- function(infobj, ...) {
 #' * Expected Improvement (`InfillEI`)
 #' * Response (`InfillResponse`)
 #'
-#' @param lambda [`numeric(1)`]
+#' @param lambda `[numeric(1)]`
 #' @family Infill Criteria
-#' @rdname Infill
+#' @name Infill
+#' @aliases InfillCB InfillEI InfillResponse
 #' @export
 InfillCB <- function(lambda = 2) {
   assertNumber(lambda)

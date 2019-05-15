@@ -76,7 +76,7 @@ MosmafsConfig <- function(mutator, recombinator, generations, mu = 80, lambda = 
   assertClass(recombinator, "ecr_recombinator")
   assertInt(mu, lower = 1)
   assertInt(lambda, lower = 1)
-  assert(checkInt(generations, lower = 0), checkList(generations, type = "function"))
+  assert(checkInt(generations, lower = 0), checkList(generations, types = "function"))
   assertClass(parent.selector, "ecr_selector")
   assertClass(survival.selector, "ecr_selector")
   assert(checkChoice(survival.strategy, c("plus", "comma")), checkFunction(survival.strategy))

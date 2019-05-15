@@ -39,7 +39,7 @@
 #'   setting the second-objective value to 0 by default. This may also be a function with
 #'   two inputs `performance`, `featfrac` that computes a scalarized objective. The scalarized
 #'   objective must always be minimized.
-#' @return `function` an objective function for [`mlrMBO::mlr`].
+#' @return `function` an objective function for [`mlrMBO::mbo`].
 #'
 #' @family Control Objects
 #' @export

@@ -25,12 +25,14 @@ Imports:
   mosmafs,
   mlr,
   parallelMap,
-  rgenoud
+  rgenoud,
+  ecr2
 Suggests:
   knitr,
   magrittr,
   testthat,
-  praznik
+  praznik,
+  class
 Remotes:
   jakobbossek/ecr2,
   mb706/kergp,

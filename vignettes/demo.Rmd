@@ -118,7 +118,7 @@ ps.obj
 ps.joint.obj <- getParamSet(objective.joint.mo)
 ps.joint.obj
 ```
-```{r}
+```{r, message = FALSE}
 mutator.simple <- combine.operators(ps.obj,
   numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
   integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
@@ -131,7 +131,7 @@ crossover.simple <- combine.operators(ps.obj,
 
 mosmafs.config <- MosmafsConfig(mutator.simple, crossover.simple, 10)
 ```
-```{r}
+```{r, message = FALSE}
 mutator.joint.simple <- combine.operators(ps.joint.obj,
   numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
   integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
