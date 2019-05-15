@@ -371,6 +371,10 @@ opt <- try(rgenoud::genoud(
 # ---------------------------------------------------------------
 
 objective <- makeMobafeasObjective(makeLearner("classif.knn"), pid.task, pSS(k: integer[1, 30]), cv10, holdout.data = pid.task)
+objective.singleobj <- makeMobafeasObjective(makeLearner("classif.knn"), pid.task, pSS(k: integer[1, 30]), cv10, holdout.data = pid.task, multi.objective = FALSE)
+objective.scalarized <- makeMobafeasObjective(makeLearner("classif.knn"), pid.task, pSS(k: integer[1, 30]), cv10, holdout.data = pid.task,
+  multi.objective = function(perf, featfrac) perf + featfrac)
+
 ps.objective <- getParamSet(objective)
 
 mutator.simple <- combine.operators(ps.objective,
@@ -382,7 +386,6 @@ crossover.simple <- combine.operators(ps.objective,
   numeric = recPCrossover,
   integer = recPCrossover,
   selector.selection = recPCrossover)
-
 
 mosmafs.config <- MosmafsConfig(mutator.simple, crossover.simple, 10)
 
@@ -396,22 +399,41 @@ optstate.naive <- mobafeasMBO(objective, population = pop, control = ctrl)
 optstate <- mobafeasMBO(objective, population = pop, control = ctrl,
   learner = constructMBFLearner(ps.objective, kernelMBFHamming))
 
-optstate.nows <- mobafeasMBO(objective, population = pop, control = ctrl,
+optstate.singleobj <- mobafeasMBO(objective.singleobj, population = pop, control = ctrl,
+  learner = constructMBFLearner(ps.objective, kernelMBFHamming))
+
+optstate.scalarized <- mobafeasMBO(objective.scalarized, population = pop, control = ctrl,
   learner = constructMBFLearner(ps.objective, kernelMBFHamming))
 
 
 res <- collectMBFResult(optstate)
-res.nows <- collectMBFResult(optstate.nows)
 res.naive <- collectMBFResult(optstate.naive)
+res.singleobj <- collectMBFResult(optstate.singleobj)
+res.scalarized <- collectMBFResult(optstate.scalarized)
+
+
 
 res$run <- "res"
-res.nows$run <- "nows"
 res.naive$run <- "naive"
+res.singleobj$run <- "singleobj"
+res.scalarized$run <- "scalarized"
+
 
 library("ggplot2")
-data <- rbind(res, res.nows, res.naive)
+data <- rbind(res, res.naive, res.singleobj, res.scalarized)
 
 ggplot(data, aes(x = perf, y = propfeat, color = run)) + geom_point()
+
+ggplot(data, aes(x = dob, y = untransformed.val, color = run)) + geom_point()
+ggplot(data, aes(x = dob, y = propfeat, color = run)) + geom_point()
+ggplot(data, aes(x = perf, y = untransformed.val, color = run)) + geom_point()
+ggplot(data, aes(x = perf, y = untransformed.val + propfeat, color = run)) + geom_point()
+
+
+res.singleobj
+
+
+
 ggplot(data, aes(x = dob, y = train.time, color = run)) + geom_point()
 ggplot(data, aes(x = dob, y = propose.time, color = run)) + geom_point()
 ggplot(data, aes(x = dob, y = naive.hout.domHV, color = run)) + geom_point()
