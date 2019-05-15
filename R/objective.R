@@ -41,7 +41,7 @@
 #'   objective must always be minimized.
 #' @return `function` an objective function for [`mlrMBO::mlr`].
 #' @export
-makeMobafeasObjective <- function(learner, task, ps, resampling, measure = NULL, holdout.data = NULL, worst.measure = NULL, cpo = NULLCPO, multi.objective = TRUE) {
+makeMobafeasObjective <- function(learner, task, ps = pSS(), resampling, measure = NULL, holdout.data = NULL, worst.measure = NULL, cpo = NULLCPO, multi.objective = TRUE) {
 
   if (is.null(measure)) {
     measure <- getDefaultMeasure(task)
@@ -85,7 +85,7 @@ makeMobafeasObjective <- function(learner, task, ps, resampling, measure = NULL,
       learner <- setHyperPars(learner, par.vals = args)
       untransformed.val <- resample(learner, task, resampling, list(measure), show.info = FALSE)$aggr
 
-      if (is.na(val)) {
+      if (is.na(untransformed.val)) {
         ret <- worst.measure
       } else {
         ret <- unname(trafo.fun(untransformed.val, propfeat))
@@ -96,7 +96,7 @@ makeMobafeasObjective <- function(learner, task, ps, resampling, measure = NULL,
         model <- train(learner, task)
         prd <- predict(model, holdout.data)
         untransformed.holdout <- performance(prd, list(measure), task, model)[1]
-        if (is.na(val)) {
+        if (is.na(untransformed.holdout)) {
           holdout <- worst.measure
         } else {
           holdout <- unname(trafo.fun(untransformed.holdout, propfeat))
@@ -104,7 +104,7 @@ makeMobafeasObjective <- function(learner, task, ps, resampling, measure = NULL,
         extras$holdout <- holdout
         extras$untransformed.holdout <- untransformed.holdout
       }
-      attr(ret, "etras") <- extras
+      attr(ret, "extras") <- extras
       ret
     })
   attr(fun, "co.objective") <- if (multi.objective) function(design) {

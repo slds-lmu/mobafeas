@@ -62,7 +62,24 @@ computePopulationInfo <- function(model, design, control) {
   popmatrix <- rbind(pointdata$value, pointdata$c2)
   paretofront <- popmatrix[, ecr::nondominated(popmatrix), drop = FALSE]
   paretofront <- paretofront[, order(paretofront[2, ]), drop = FALSE]
-  nugget <- model$learner.model$varNoise # TODO
+  nugget <- getNugget(model$learner.model)
 
   list(pointdata = pointdata, paretofront = paretofront, nugget = nugget, nadir = control$nadir)
+}
+
+
+getNugget <- function(learner.model) {
+  UseMethod("getNugget")
+}
+
+getNugget.default <- function(learner.model) {
+  NULL
+}
+
+getNugget.DiceKriging <- function(learner.model) {
+  learner.model@covariance@nugget
+}
+
+getNugget.gp <- function(learner.model) {
+  learner.model$varNoise
 }

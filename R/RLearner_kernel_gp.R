@@ -9,9 +9,11 @@ makeRLearner.regr.kernel.gp <- function() {
       special.kernel: untyped,
       special.kernel.features: untyped,
       noise = TRUE: logical,
+      print.level: integer[0, 2],
+      warmstart: logical,
       savevarenv: untyped
     ),
-    par.vals = list(default.kernel = "matern5_2", savevarenv = new.env(parent = emptyenv())),
+    par.vals = list(default.kernel = "matern5_2", savevarenv = new.env(parent = emptyenv()), print.level = 1, warmstart = TRUE),
     properties = c("numerics", "se"),
     name = "Kernel GP",
     short.name = "kernel.gp",
@@ -20,7 +22,7 @@ makeRLearner.regr.kernel.gp <- function() {
 }
 
 #' @export
-trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NULL, default.kernel, special.kernel, special.kernel.features, savevarenv, ...) {
+trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NULL, default.kernel, special.kernel, special.kernel.features, savevarenv, print.level, warmstart, ...) {
   featnames <- getTaskFeatureNames(.task)
 
   assertCharacter(special.kernel.features, any.missing = FALSE, unique = TRUE)
@@ -56,22 +58,15 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     product.kernel <- def.cov
   }
 
-  if (identical(names(savevarenv$savedvars), names(kergp::coef(product.kernel)))) {
-    cat("Using saved vars\n")
+  if (warmstart && identical(names(savevarenv$savedvars), names(kergp::coef(product.kernel)))) {
+    if (print.level > 0) cat("Using saved vars\n")
     kergp::coef(product.kernel) <- pmin(coefUpper(product.kernel), pmax(coefLower(product.kernel), savevarenv$savedvars))
     vni <- min(maxvar, max(0, savevarenv$vni %??% (maxvar / 10)))
   } else {
-    cat("Not using saved vars\n")
+    if (print.level > 0) cat("Not using saved vars\n")
     kergp::coef(product.kernel) <- pmin(coefUpper(product.kernel), pmax(coefLower(product.kernel), kergp::coef(product.kernel)))
     vni <- maxvar / 10
   }
-
-  form <- x ~ 1
-  form[[2]] <- asQuoted(getTaskTargetNames(.task))
-  # TODO: this sucks
-#  cl <- parallel::makeCluster(10, type = "FORK")
-#  registerDoParallel(cl)
-#  on.exit(stopCluster(cl))
 
   opt.code <- "
   llfun <- function(par) {
@@ -89,10 +84,12 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     our.par <- gradEnv$par
     reldiff <- max(abs( ifelse(par == our.par, 0, par - our.par) / max(par + our.par, 1e-5) ))
     if (!isTRUE(1e-4 > reldiff)) {
-      cat(sprintf('Difference: %.3g\nrequested: (%s)\npresent:   (%s)\n',
-          reldiff,
-          paste(sprintf('%.3g', par), collapse = ', '),
-          paste(sprintf('%.3g', our.par), collapse = ', ')))
+      if (Ldots$print.level > 0) {
+        cat(sprintf('Difference: %.3g\nrequested: (%s)\npresent:   (%s)\n',
+            reldiff,
+            paste(sprintf('%.3g', par), collapse = ', '),
+            paste(sprintf('%.3g', our.par), collapse = ', ')))
+      }
       par <- pmin(parUpper, pmax(parLower, par))
       val <- .logLikFun0(par, object, y = thisy, X, F = thisF, compGrad = compGrad,
         noise = noise, gradEnv = gradEnv, trace = trace)
@@ -113,7 +110,7 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     gradEnv$LLgrad
   }
 
-  opt <- rgenoud::genoud(
+  suppressWarnings(opt <- rgenoud::genoud(
     fn = llfun,
     nvars = length(parNames),
     max = TRUE,
@@ -128,12 +125,15 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     gradient.check = FALSE,
     optim.method = 'L-BFGS-B',
     BFGSburnin = 3,
-    print.level = 1,
-    control = list(factr = 1e12))
+    print.level = Ldots$print.level,
+    control = list(factr = 1e12)))
   opt$convergence <- FALSE
   "
-# cluster = Ldots$cluster)
-  res <- kergp::gp(form, data = data, cov = product.kernel, optimCode = opt.code, varNoiseIni = vni, ...)
+
+  form <- x ~ 1
+  form[[2]] <- asQuoted(getTaskTargetNames(.task))
+
+  res <- kergp::gp(form, data = data, cov = product.kernel, optimCode = opt.code, varNoiseIni = vni, print.level = print.level, ...)
   savevarenv$vni <- res$varNoise
   savevarenv$savedvars <- kergp::coef(res$covariance)
   res

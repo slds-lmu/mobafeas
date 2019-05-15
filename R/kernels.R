@@ -13,4 +13,3 @@ kernelMBFHamming <- function(d) {
   par = 1 / d,
   parNames = "theta")
 }
-

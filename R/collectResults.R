@@ -2,7 +2,7 @@
 
 
 
-collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = function(x) computeHV(x, ref.point)), ref.point = c(max(opt.state$opt.path$env$path$y), 1)) {
+collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = function(x) computeHV(x, ref.point)), ref.point = opt.state$control$nadir) {
   normalize.funlist <- function(fl) {
     assertList(fl, any.missing = FALSE, types = c("function",
       "character"))
@@ -31,7 +31,6 @@ collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = funct
   odf <- as.data.frame(opt.path, include.x = TRUE, include.y = FALSE, include.rest = FALSE)
   odf <- convertDataFrameCols(odf, ints.as.num = TRUE, logicals.as.factor = TRUE)
   individuals <- dfRowsToList(odf, ps)
-  c2.value <- apply(odf[grepl("^selector\\.selection[0-9]+$", colnames(odf))], 1, mean)
 
   yval <- as.data.frame(opt.path, include.x = FALSE, include.y = TRUE, include.rest = FALSE)
   extras <- as.data.frame(opt.path, include.x = FALSE, include.y = FALSE, include.rest = TRUE)
@@ -43,12 +42,14 @@ collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = funct
 
   resdf <- cbind(extras[c(grep("\\.time$", colnames(extras), value = TRUE), "dob", "prop.type", grep("^error\\.", colnames(extras), value = TRUE),
     getMBOInfillCritId(opt.state$control$infill.crit))],
-    yval, propfeat = c2.value, extras[holdout.col])
+    yval, extras[c("propfeat", holdout.col)])
+
+  c2col <- opt.state$control$co.objective(odf)
 
   skiprows <- sum(extras$dob == 0)
   getfits <- function(which.col) {
     lapply(seq(skiprows + 1, nrow(resdf)), function(subset) {
-      t(as.matrix(resdf[seq_len(subset), c(which.col, "propfeat")]))
+      t(as.matrix(cbind(resdf[seq_len(subset), which.col], c2col[seq_len(subset)])))
     })
   }
 
@@ -74,5 +75,6 @@ collectMBFResult <- function(opt.state, aggregate.perresult = list(domHV = funct
       true.hout.domHV, naive.hout.domHV)
   }
 
+  resdf <- cbind(resdf, extras[intersect(colnames(extras), c("untransformed.val", "untransformed.holdout"))])
   resdf
 }
