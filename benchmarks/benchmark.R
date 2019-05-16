@@ -59,7 +59,8 @@ for (i in 1:length(datasets)) {
     )
 }
 
-source("../algorithms/randomsearch_SO.R")
+source("../algorithms/randomsearch.R")
+source("../algorithms/randomsearch.R")
 
 addAlgorithm(name = "randomsearch_SO", reg = reg, fun = randomsearch)
 

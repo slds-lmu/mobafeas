@@ -1,18 +1,17 @@
+# TODO: RESULT OBJECT SHOULD BE APPROPRIATE
+
 BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lambda, ninit) {
 
-  id = strsplit(data, "/")[[1]][2]
-
   # --- task and learner ---
-  train.data = readRDS(file.path(data, "train.arff.rds"))
-  task.train = makeClassifTask(id = id, data = train.data, target = "class")
-  test.data = readRDS(file.path(data, "test.arff.rds"))  
-  task.test = makeClassifTask(id = id, data = test.data, target = "class")
-  
+  train.task = instance$train.task
+  test.task = instance$test.task # for outer evaluation
+
   lrn = LEARNERS[[learner]]
 
   # --- inner resampling ---
   stratcv = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
-  
+
+ 
   # --- we do not tune over parameters ---
   setwd("BOCS/BOCSpy")
   source_python("../../runBOCS.py")
@@ -22,6 +21,7 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
   saveRDS(stratcv, "stratcv.rds")
 
   p = getTaskNFeats(task.train)
+  ninit = ninit(task.train)
 
   time = proc.time()
 
@@ -39,4 +39,5 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
   result = makeMBOResult(design, ninit = ninit, p)
 
   return(list(result = result, task.test = task.test, task.train = task.train, runtime = runtime))
-}
+} 
+

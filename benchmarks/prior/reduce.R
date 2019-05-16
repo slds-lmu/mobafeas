@@ -3,38 +3,53 @@ library(dplyr)
 library(mlr)
 library(mlrCPO)
 
-source("helpers.R")
 source("probdesign.R")
 
-# load registry
-reg = loadRegistry("registry22", writeable = FALSE)
-tab = summarizeExperiments(by = c("job.id", "algorithm", 
-	"problem", "learner", "maxeval", "filter", "initialization", 
-	"lambda", "mu", "parent.sel", "chw.bitflip", "adaptive.filter.weights",
-	"filter.during.run"))
-tab = tab[learner == "xgboost", ]
-# tab = tab[maxeval %in% c(4000), ]
-# tab = rbind(tab[lambda != 4L, ], tab[is.na(lambda), ])
-done = ijoin(tab, findDone())
+# Reduce results
+reg = loadRegistry("registry", writeable = FALSE)
+tab = summarizeExperiments(by = c("job.id", "algorithm", "problem", "learner"))
 
-path = "results_raw_xgboost"
+path = "results_raw"
 dir.create(path)
 
-problems = c("wdbc", "ionosphere", "sonar", "hill-valley", "clean1", 
-  "tecator", "USPS", "madeline", "lsvt", "madelon", "isolet", "cnae-9")
+res = reduceResultsList(tab)
+saveRDS(res, file.path(path, "results.rds"))
+saveRDS(tab, file.path(path, "tab.rds"))
 
-experiments = list(
-	O = data.table(algorithm = "mosmafs", filter = "none", initialization = "none", chw.bitflip = FALSE, adaptive.filter.weights = FALSE, filter.during.run = FALSE),
-	OI = data.table(algorithm = "mosmafs", filter = "none", initialization = "unif", chw.bitflip = FALSE, adaptive.filter.weights = FALSE, filter.during.run = FALSE),
-	OIFi = data.table(algorithm = "mosmafs", filter = "custom", initialization = "unif", chw.bitflip = FALSE, adaptive.filter.weights = FALSE, filter.during.run = FALSE),
-	OIFiFm = data.table(algorithm = "mosmafs", filter = "custom", initialization = "unif", chw.bitflip = FALSE, adaptive.filter.weights = FALSE, filter.during.run = TRUE),
-	OIFiFmS = data.table(algorithm = "mosmafs", filter = "custom", initialization = "unif", chw.bitflip = FALSE, adaptive.filter.weights = TRUE, filter.during.run = TRUE),
-	OIH = data.table(algorithm = "mosmafs", filter = "none", initialization = "unif", chw.bitflip = TRUE, adaptive.filter.weights = FALSE, filter.during.run = FALSE),
-	OIHFiFmS = data.table(algorithm = "mosmafs", filter = "custom", initialization = "unif", chw.bitflip = TRUE, adaptive.filter.weights = TRUE, filter.during.run = TRUE),
-	RS = data.table(algorithm = "randomsearch", initialization = "none", filter = "none"),
-	RSI = data.table(algorithm = "randomsearch", initialization = "unif", filter = "none"),
-	RSIF = data.table(algorithm = "randomsearch", initialization = "unif", filter = "custom")
-	)
+# Analyse results
+library(ggplot2)
+library(GGally)
+library(parcoords)
 
-collectBenchmarkResults(path, experiments, tab)
-collectParetofront(path, experiments = experiments[c("O", "OIHFiFmS", "RS", "RSI", "RSIF")], tab, problems, learners = c("xgboost"))
+res = readRDS(file.path(path, "results.rds"))
+tab = readRDS(file.path(path, "tab.rds"))
+
+dir.create("results")
+
+for (lrn in c("SVM", "xgboost", "kknn")) {
+	reslist = list()
+
+	dir.create(file.path("results", lrn))
+
+	for (data in unique(tab$problem)) {
+		idx = tab[problem == data & learner == lrn, ]$job.id
+
+		res.red = res[idx]
+		bmr = res.red[[1]]$result$bmr
+		r = getBMRTuneResults(bmr)[[1]][[1]]
+
+		reslist[[data]] = data.frame(t(sapply(r, function(s) unlist(s$x))))
+		reslist[[data]]$prob = data
+	}
+
+	resr = do.call("rbind", reslist)
+	resr$prob = as.factor(resr$prob)
+
+	p = parcoords::parcoords(resr , rownames = FALSE,
+                     reorder = TRUE, brushMode="1D")
+
+	htmlwidgets::saveWidget(as_widget(p), paste(lrn, ".html", sep = ""))
+
+	# ggsave(file.path("results", lrn, "coordplot.png"), p)
+}
+

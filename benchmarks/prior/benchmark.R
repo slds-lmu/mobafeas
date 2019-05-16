@@ -4,6 +4,7 @@ library("batchtools")
 library("data.table")
 library("mlrCPO")
 library("OpenML")
+library("parallelMap")
 
 source("def.R")
 
@@ -41,16 +42,18 @@ randomsearch = function(data, job, instance, learner, maxeval, cv.iters) {
 
   ctrl = makeTuneControlRandom(maxit = iters)
 
-  inner = makeResampleDesc("CV", iters = 2L, stratify = TRUE)
+  inner = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
   lrn = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl, show.info = FALSE)
 
   # Outer resampling loop
   
   time = proc.time()
 
+  parallelMap::parallelStartMulticore(cpus = 10L) 
   r = OpenML::runTaskMlr(task, lrn, measures = mmce, verbosity = TRUE, seed = 1, models = TRUE)
   # getBMRTuneResults(r$bmr)
-
+  parallelMap::parallelStop()
+  
   runtime = proc.time() - time
   
   return(list(result = r, runtime = runtime))

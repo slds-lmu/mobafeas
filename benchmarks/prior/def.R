@@ -1,6 +1,6 @@
 ## TODO: Benchmark design
 
-packages = c("batchtools", "ParamHelpers", "mlr", "OpenML")
+packages = c("batchtools", "ParamHelpers", "mlr", "OpenML", "parallelMap")
 
 # source the prob design
 source("probdesign.R")
@@ -10,10 +10,10 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-# 40 * p
-MAXEVALF = 4L
+# 200 * p
+MAXEVALF = 40L
 
-CVITERS = 2L
+CVITERS = 5L
 
 ades.random = CJ(learner = c("SVM", "kknn", "xgboost"), 
 			maxeval = MAXEVALF, 

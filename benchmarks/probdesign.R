@@ -9,7 +9,9 @@ datasets = list("sonar" = 39, "ionosphere" = 57, "madelon" = 145853,
 # --- specify learners ---
 # Machine learning algorithms to be benchmarked
 LEARNERS = list("SVM" = makeLearner("classif.ksvm", kernel = "rbfdot"),
-	"kknn" = makeLearner("classif.kknn", k = 7L, kernel = "optimal"),
+	"SVM.notune" = makeLearner("classif.ksvm", kernel = "rbfdot", C = 100, sigma = 1),
+	"kknn" = makeLearner("classif.kknn", k = 7L, kernel = "optimal", distance = 5),
+	"kknn.notune" = makeLearner("classif.kknn", k = 7L, kernel = "optimal", distance = 5),
 	"xgboost" = makeLearner("classif.xgboost", id = "classif.xgboost", eval_metric = "error", objective = "binary:logistic")
 	)
 # 

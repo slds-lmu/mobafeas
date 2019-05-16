@@ -1,19 +1,17 @@
-MBONaive = function(data, job, instance, learner, maxeval, infill, surrogate, cv.iters, ninit) {
-
-  id = strsplit(data, "/")[[1]][2]
+MBONaive = function(data, job, instance, learner, maxeval, infill, infill.opt, surrogate, cv.iters, ninit) {
 
   # --- task and learner ---
-  train.data = readRDS(file.path(data, "train.arff.rds"))
-  task.train = makeClassifTask(id = id, data = train.data, target = "class")
-  test.data = readRDS(file.path(data, "test.arff.rds"))  
-  task.test = makeClassifTask(id = id, data = test.data, target = "class")
-  
+  train.task = instance$train.task
+  test.task = instance$test.task # for outer evaluation
+
   lrn = LEARNERS[[learner]]
 
   # --- inner resampling ---
   stratcv = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 
+  # --- number of features ---
   p = getTaskNFeats(task.train)
+
 
   # --- create baseline objective
   # REPLACE BY MARTINS CODE?
@@ -29,7 +27,7 @@ MBONaive = function(data, job, instance, learner, maxeval, infill, surrogate, cv
       )
   )
 
-  des = generateDesign(n = 2 * p, par.set = getParamSet(obj), fun = lhs::randomLHS)
+  des = generateDesign(n = ninit(task.train), par.set = getParamSet(obj), fun = lhs::randomLHS)
   des$y = apply(des, 1, obj)
 
   ctrl = makeMBOControl(n.objectives = 1) 

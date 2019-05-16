@@ -3,7 +3,7 @@
 packages = c("batchtools", "ecr", "magrittr", "mosmafs", "ParamHelpers", "mlr", "mlrCPO", "mlrMBO")
 
 # source the prob design
-source("../probdesign.R")
+source("probdesign.R")
 
 OVERWRITE = FALSE
 
@@ -16,25 +16,56 @@ OVERWRITE = FALSE
 MAXEVAL = 1000L
 
 # Infill optimizer
-
+# TODO: do we want to compare here?
+INFILL_OPT = list("mosmafs", "focussearch")
 
 # Infill crit
 INFILL = list("cb" = makeMBOInfillCritCB())
 
 # Surrogate
 SURROGATE = list(randomForest = cpoImputeConstant("__MISSING__") %>>% makeLearner("regr.randomForest", se.method = "jackknife", keep.inbag = TRUE, predict.type = "se"),
-	              km.nugget = cpoDummyEncode() %>>% makeLearner("regr.km", predict.type = "se", par.vals = list(nugget.estim = TRUE, nugget.stability = 10e-8))
-)
+	              km.nugget = cpoDummyEncode() %>>% makeLearner("regr.km", predict.type = "se", par.vals = list(nugget.estim = TRUE, nugget.stability = 10e-8)))
 
 
+# Kernel
+KERNEL = list("naive" = NA)
+
+# inner resampling iterations
+# TODO: keep it that high?
+CV.ITERS = 10L
+
+# TODO: determine the size of the initial design
+NINIT = function(task) getTaskNFeats(task)
+
+# problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
 names(pdes) = names(datasets)
 
-ades.BOCS = list()
+# need to choose lambda appropriately
+ades.BOCS = CJ(learner = c("SVM"), 
+			maxeval = MAXEVAL, 
+			cv.iters = CV.ITERS,
+			sim_anneal = c(TRUE),
+			lambda = c(10^(-2)),
+			ninit = NINIT, 
+			sorted = FALSE)
 
-ades.random = list()
+ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
+			maxeval = MAXEVAL, 
+			cv.iters = CV.ITERS,
+			tune_hyperpars = c(TRUE, FALSE),
+			sorted = FALSE)
 
-ades.MBOnaive = list()
+
+ades.MBO = CJ(learner = c("SVM", "kknn", "xgboost"), 
+			maxeval = MAXEVAL, 
+			cv.iters = CV.ITERS,
+			infill.opt = "mosmafs",
+			infill = c("cb"),
+			ninit = NINIT, 
+			surrogate = c("km.nugget"),
+			sorted = FALSE)
+
 
 REPLICATIONS = 10L
 
