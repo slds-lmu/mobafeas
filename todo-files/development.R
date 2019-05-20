@@ -479,3 +479,59 @@ checkGrad(kernelMBFHamming(3))
            par = c(1, 2)
            )
 
+# -----------------------------------------------------------
+
+
+
+data <- readRDS("../../mosmafs/data/SPLIT_sonar.rds")
+
+
+kernels <- list(
+    hamming = kernelMBFHamming(),
+    graph = kernelMBFGraph(TRUE),
+    graph.multi = kernelMBFGraph(FALSE),
+    agreement = kernelMBFAgreement(FALSE),
+    agreement.limited = kernelMBFAgreement(TRUE),
+    agree.cor = kernelMBFAgreeCor(data$task, FALSE),
+    agree.cor.limited = kernelMBFAgreeCor(data$task, TRUE))
+
+
+svm.ps <- pSS(
+    C: numeric[-3, 3] [[trafo = function(x) 10^x]], # according to Fröhlich et al.
+    sigma: numeric[-3, 3] [[trafo = function(x) 10^x]]
+)
+
+lrn <- makeLearner("classif.svm", fitted = FALSE)
+
+mfo <- makeMobafeasObjective(lrn, data$task, svm.ps, cv10, holdout.data = data$hout)
+
+ps.obj <- getParamSet(mfo)
+
+mutator.simple <- combine.operators(ps.obj,
+  numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
+  integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
+  selector.selection = mutBitflipCHW)
+
+crossover.simple <- combine.operators(ps.obj,
+  numeric = recPCrossover,
+  integer = recPCrossover,
+  selector.selection = recPCrossover)
+
+mosmafs.config <- MosmafsConfig(mutator.simple, crossover.simple,
+  list(mosmafsTermStagnationObjStatistic(3)))
+
+ctrl <- makeMBFControl(mosmafs.config) %>%
+  setMBOControlTermination(300)
+
+parallelStartMulticore(10)
+
+for (kidx in seq_along(kernels)[-1]) {
+  k <- kernels[[kidx]]
+  surrogate <- constructMBFLearner(ps.obj, k)
+  parallel::mclapply(seq_len(10), function(i) {
+    initials <- sampleValues(ps.obj, 80, discrete.names = TRUE) %>%
+      initSelector()
+    res <- mobafeasMBO(mfo, initials, surrogate, ctrl)
+    saveRDS(res, sprintf("Kernel_%s_exp_%s.rds", kidx, i))
+  }, mc.cores = 10)
+}
