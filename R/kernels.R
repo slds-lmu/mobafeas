@@ -53,7 +53,7 @@ kernelMBFAgreement <- function(limit.par = FALSE) function(d) {
     K
   }, TRUE, d = d,
   parLower = 0,
-  parUpper = if (limit.par) 1 else Inf,
+  parUpper = if (limit.par) 1 else d,
   par = 1,
   parNames = "theta")
 }
@@ -79,7 +79,7 @@ kernelMBFAgreeCor <- function(data, limit.par = FALSE) function(d) {
     K
   }, TRUE, d = d,
   parLower = 0,
-  parUpper = if (limit.par) 1 else Inf,
+  parUpper = if (limit.par) 1 else d,
   par = 1,
   parNames = "theta")
 }

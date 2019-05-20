@@ -525,7 +525,7 @@ ctrl <- makeMBFControl(mosmafs.config) %>%
 
 parallelStartMulticore(10)
 
-for (kidx in seq_along(kernels)[-1]) {
+for (kidx in c(4, 6, 7)) {
   k <- kernels[[kidx]]
   surrogate <- constructMBFLearner(ps.obj, k)
   parallel::mclapply(seq_len(10), function(i) {
