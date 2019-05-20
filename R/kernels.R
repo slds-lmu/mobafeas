@@ -37,7 +37,7 @@ kernelMBFGraph <- function(allequal = TRUE) function(d) {
     attr(K, "gradient") <- K * gradmul
     K
   }, TRUE, d = d,
-  parLower = rep(0, repno),
+  parLower = rep(1e-8, repno),
   parUpper = rep(-log(1e-8 / d), repno),
   par = rep(1/d, repno),
   parNames = parnames)
