@@ -72,8 +72,13 @@ kernelMBFAgreeCor <- function(data, limit.par = FALSE) function(d) {
   cormat <- abs(cor(data))
   assertMatrix(cormat, any.missing = FALSE)
   covMan(function(f1, f2, par) {
-    subcor <- cormat[as.logical(f1), as.logical(f2)]
-    disagreement <- (sum(1 - apply(subcor, 1, max)) + sum(1 - apply(subcor, 2, max))) / d
+    subcor <- environment(object@kernel)$cormat[as.logical(f1), as.logical(f2), drop = FALSE]
+    if (length(subcor)) {
+      disagreement <- (sum(1 - apply(subcor, 1, max)) + sum(1 - apply(subcor, 2, max))) / d
+    } else {
+      # either f1 or f2 are all 0 --> maximum disagreement for all features in the other config
+      disagreement <- sum(f1 + f2) / d
+    }
     K <- 1 - disagreement * par
     attr(K, "gradient") <- -disagreement
     K

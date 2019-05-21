@@ -530,7 +530,7 @@ ctrl <- makeMBFControl(mosmafs.config) %>%
 
 parallelStartMulticore(10)
 
-for (kidx in c(4, 6, 7)) {
+for (kidx in c(6, 7)) {
   k <- kernels[[kidx]]
   surrogate <- setHyperPars(constructMBFLearner(ps.obj, k), numrestarts = 3)
   parallel::mclapply(seq_len(10), function(i) {
