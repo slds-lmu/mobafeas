@@ -261,7 +261,7 @@ rt <- makeRegrTask("test",
   data.frame(x = 1 / ((-3:3) + 0.5), y = (-3:3)^2/100 + sin(-3:3)),
   target = "y")
 
-gpone <- makeLearner("regr.kernel.gp", special.kernel = kMatern(d = 2, nu = "3/2"), special.kernel.features = character(0), default.kernel = "matern3_2", predict.type = "se", multistart = 1, noise = TRUE)
+gpone <- makeLearner("regr.kernel.gp", special.kernel = kMatern(d = 2, nu = "3/2"), special.kernel.features = character(0), default.kernel = "matern3_2", predict.type = "se", numrestarts = 1, noise = TRUE)
 
 
 devtools::load_all("..")
@@ -269,6 +269,11 @@ debugonce(kergp::gp)
 gpmod <- train(gpone, rt)
 
 gpmod <- train(gpone, bhx)
+gpmod2 <- train(gpone, bhx)
+
+gptwo <- setHyperPars(gpone, numrestarts = 3)
+gpmod3 <- train(gptwo, bhx)
+
 kmmod <- train(kmlrn, bhx)
 
 gpmod$learner.model
@@ -527,7 +532,7 @@ parallelStartMulticore(10)
 
 for (kidx in c(4, 6, 7)) {
   k <- kernels[[kidx]]
-  surrogate <- constructMBFLearner(ps.obj, k)
+  surrogate <- setHyperPars(constructMBFLearner(ps.obj, k), numrestarts = 3)
   parallel::mclapply(seq_len(10), function(i) {
     initials <- sampleValues(ps.obj, 80, discrete.names = TRUE) %>%
       initSelector()

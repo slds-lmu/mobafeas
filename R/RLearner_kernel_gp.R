@@ -11,9 +11,10 @@ makeRLearner.regr.kernel.gp <- function() {
       noise = TRUE: logical,
       print.level = NA: integer[0, 2],
       warmstart = NA: logical,
+      numrestarts = NA: integer[1, ],
       savevarenv = NA: untyped
     ),
-    par.vals = list(default.kernel = "matern5_2", savevarenv = new.env(parent = emptyenv()), print.level = 1, warmstart = TRUE),
+    par.vals = list(default.kernel = "matern5_2", savevarenv = new.env(parent = emptyenv()), print.level = 1, warmstart = TRUE, numrestarts = 1),
     properties = c("numerics", "se"),
     name = "Kernel GP",
     short.name = "kernel.gp",
@@ -22,7 +23,7 @@ makeRLearner.regr.kernel.gp <- function() {
 }
 
 #' @export
-trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NULL, default.kernel, special.kernel, special.kernel.features, savevarenv, print.level, warmstart, ...) {
+trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NULL, default.kernel, special.kernel, special.kernel.features, savevarenv, print.level, warmstart, numrestarts, ...) {
   featnames <- getTaskFeatureNames(.task)
 
   assertCharacter(special.kernel.features, any.missing = FALSE, unique = TRUE)
@@ -110,30 +111,44 @@ trainLearner.regr.kernel.gp <- function(.learner, .task, .subset, .weights = NUL
     gradEnv$LLgrad
   }
 
-  suppressWarnings(opt <- rgenoud::genoud(
-    fn = llfun,
-    nvars = length(parNames),
-    max = TRUE,
-    pop.size = min(20, floor(5 + 3 * log(length(parNames)))),
-    max.generations = 7,
-    wait.generations = 2,
-    hard.generation.limit = TRUE,
-    starting.values = parIni,
-    Domains = cbind(parLower, parUpper),
-    gr = storedLogLikGrad,
-    boundary.enforcement = 2,
-    gradient.check = FALSE,
-    optim.method = 'L-BFGS-B',
-    BFGSburnin = 3,
-    print.level = Ldots$print.level,
-    control = list(factr = 1e12)))
+  numrestarts <- Ldots$numrestarts
+  if (numrestarts == 1) {
+    plxfun <- lapply
+  } else {
+    plxfun <- function(...) parallelMap::parallelLapply(..., level = 'mobafeas.gprestart')
+  }
+
+  repeat {
+      opts <- plxfun(seq_len(numrestarts),
+        function(dummy) { suppressWarnings(rgenoud::genoud(
+        fn = llfun,
+          nvars = length(parNames),
+          max = TRUE,
+          pop.size = min(20, floor(5 + 3 * log(length(parNames)))),
+          max.generations = 7,
+          wait.generations = 2,
+          hard.generation.limit = TRUE,
+          starting.values = parIni,
+          Domains = cbind(parLower, parUpper),
+          gr = storedLogLikGrad,
+          boundary.enforcement = 2,
+          gradient.check = FALSE,
+          optim.method = 'L-BFGS-B',
+          BFGSburnin = 3,
+          print.level = Ldots$print.level,
+          control = list(factr = 1e12)))
+        })
+      chosen <- which.max(sapply(opts, function(x) x$value))
+      opt <- opts[[chosen]]
+      if (opt$value > -1e+200) break
+    }
   opt$convergence <- FALSE
   "
 
   form <- x ~ 1
   form[[2]] <- asQuoted(getTaskTargetNames(.task))
 
-  res <- kergp::gp(form, data = data, cov = product.kernel, optimCode = opt.code, varNoiseIni = vni, print.level = print.level, ...)
+  res <- kergp::gp(form, data = data, cov = product.kernel, optimCode = opt.code, varNoiseIni = vni, print.level = print.level, numrestarts = numrestarts, ...)
   savevarenv$vni <- res$varNoise
   savevarenv$savedvars <- kergp::coef(res$covariance)
   res
