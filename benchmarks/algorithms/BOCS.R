@@ -28,7 +28,7 @@ BOCS = function(data, job, instance, learner,
   # tune the tuning
   time = proc.time()
 
-  parallelMap::parallelStartMulticore(cpus = 8L) 
+  # parallelMap::parallelStartMulticore(cpus = 8L) 
   # parallelMap::parallelStartSocket(cpus = 8L) 
   
   mod = train(lrn.wrp, train.task)
