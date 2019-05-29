@@ -58,11 +58,10 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
   mosmafs.config = MosmafsConfig(mutator.simple, crossover.simple,
     list(mosmafsTermStagnationObjStatistic(3)))
 
-  ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(300)
-
   surrogate = constructMBFLearner(ps.obj, KERNELS[[kernel]])
   
   ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(maxeval - ninit)
+  ctrl = setMBOControlInfill(ctrl, crit = INFILL[[infill]])
 
   initials = sampleValues(ps.obj, ninit, discrete.names = TRUE) %>% initSelector()
 
