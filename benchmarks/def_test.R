@@ -5,7 +5,7 @@ packages = c("batchtools",
 	"magrittr", 
 	"mosmafs", 
 	"ParamHelpers", 
-	"mlr", "mlrCPO", "mlrMBO")
+	"mlr", "mlrCPO", "mlrMBO", "reticulate")
 
 # source the prob design
 source("probdesign.R")
@@ -15,7 +15,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 20L
+MAXEVAL = 50L
 
 # Infill optimizer
 # TODO: do we want to compare here?
@@ -36,7 +36,7 @@ KERNEL = list("naive" = NA)
 CV.ITERS = 10L
 
 # TODO: determine the size of the initial design
-NINIT = 10L
+NINIT = 20L
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))

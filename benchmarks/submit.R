@@ -34,30 +34,7 @@ source("probdesign.R")
 
 res = testJob(1) 
 
-# O done
-# OI done
-# OIFi submitted
-# OIFiFm submitted
-# OIFiFmS submitted
-# OIH done
-# RS done
-# RSI done
-# RSIF submitted
-experiment = "RSIF"
-tosubmit = ijoin(tab, experiments[[experiment]], by = names(experiments[[experiment]]))
-tosubmit = tosubmit[problem %in% problems.serial, ]
-done = ijoin(tosubmit, findDone())
-df = done[, replication := 1:length(job.id), by = c("learner", "problem")]
-
-status_finished = df[, max(replication), by = c("problem", "learner")]
-status_finished = status_finished[, sum(V1), by = c("problem", "learner")]
-status_finished
-# tosubmit = tosubmit[, chunk := chunk(job.id, chunk.size = 10)
-# nchunks = nrow(tosubmit) / chunk.size
-tosubmit = ijoin(tosubmit, findNotDone())
-ijoin(tosubmit, findOnSystem())
-tosubmit = tosubmit[- which(job.id %in% findOnSystem()$job.id), ]
-submitJobs(tosubmit, resources = resources.serial)
+submitJobs(3L, resources = resources.mpp2)
 
 # --- LRZ ivymuc ---  
 
