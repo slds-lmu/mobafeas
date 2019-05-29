@@ -1,11 +1,8 @@
 ## TODO: Benchmark design
 
-packages = c("batchtools", 
-	"ecr", "mobafeas",
-	"magrittr", 
-	"mosmafs", 
-	"ParamHelpers", 
-	"mlr", "mlrCPO", "mlrMBO")
+packages = c("batchtools", "ecr", "mobafeas",
+	"magrittr", "mosmafs", "ParamHelpers", 
+	"mlr", "mlrCPO", "mlrMBO", "reticulate")
 
 # source the prob design
 source("probdesign.R")
@@ -14,33 +11,34 @@ OVERWRITE = FALSE
 
 datafolder = "data"
 
-# do not overwrite registry
-OVERWRITE = FALSE
-
 # Maximum number of evaluations allowed
-MAXEVAL = 20L
+MAXEVAL = 1000L
 
 # Infill optimizer
 # TODO: do we want to compare here?
-INFILL_OPT = list("mosmafs", "focussearch")
+INFILL_OPT = list("mosmafs")
 
 # Infill crit
-INFILL = list("cb" = makeMBOInfillCritCB())
-
-# Surrogate
-SURROGATE = list(randomForest = cpoImputeConstant("__MISSING__") %>>% makeLearner("regr.randomForest", se.method = "jackknife", keep.inbag = TRUE, predict.type = "se"),
-	              km.nugget = cpoDummyEncode() %>>% makeLearner("regr.km", predict.type = "se", par.vals = list(nugget.estim = TRUE, nugget.stability = 10e-8)))
-
+INFILL = list("cb" = InfillCB(), "ei" = InfillEI())
 
 # Kernel
-KERNEL = list("naive" = NA)
+KERNELS = list(
+    hamming = kernelMBFHamming(),
+    graph = kernelMBFGraph(TRUE),
+    graph.multi = kernelMBFGraph(FALSE),
+    agreement = kernelMBFAgreement(FALSE),
+    agreement.limited = kernelMBFAgreement(TRUE)# ,
+    # agree.cor = kernelMBFAgreeCor(data$task, FALSE),
+    # agree.cor.limited = kernelMBFAgreeCor(data$task, TRUE)
+    )
+
 
 # inner resampling iterations
 # TODO: keep it that high?
 CV.ITERS = 10L
 
 # TODO: determine the size of the initial design
-NINIT = 10L
+NINIT = 100L
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
@@ -53,7 +51,7 @@ ades.BOCS = CJ(learner = c("SVM"),
 			sim_anneal = c(TRUE),
 			lambda = 0,
 			ninit = NINIT,
-			objective = c("SO", "scalar") 
+			objective = c("SO", "scalar"), 
 			sorted = FALSE)
 
 ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
@@ -63,33 +61,16 @@ ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"),
 			sorted = FALSE)
 
 
-ades.MBO = CJ(learner = c("SVM", "kknn", "xgboost"), 
+ades.mobafeas = CJ(learner = c("SVM"), 
 			maxeval = MAXEVAL, 
 			cv.iters = CV.ITERS,
-			infill.opt = "mosmafs",
-			infill = c("cb"),
+			infill = c("cb", "ei"),
+			kernel = c("hamming", "graph", "agreement"),
 			ninit = NINIT, 
-			surrogate = c("km.nugget"),
+			objective = c("SO", "MO", "scalar"),
+			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 
 
 REPLICATIONS = 1L
-
-# ades.random = CJ(learner = c("SVM", "kknn", "xgboost"), 
-# 			maxeval = MAXEVAL, 
-# 			filter = c("none", "custom"),
-# 			initialization = c("none", "unif"), 
-# 			sorted = FALSE)
-
-# ades.mosmafs = CJ(learner = c("xgboost"), 
-# 			maxeval = MAXEVAL, 
-# 			filter = c("none", "custom"),
-# 			initialization = c("none", "unif"), 
-# 			lambda = 15L,
-# 			mu = 80,
-# 			parent.sel = c("selTournamentMO"),
-# 			chw.bitflip = c(FALSE, TRUE),
-# 			adaptive.filter.weights = c(FALSE, TRUE),
-# 			filter.during.run = c(FALSE, TRUE),
-# 			sorted = FALSE)
 
