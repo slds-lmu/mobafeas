@@ -72,11 +72,9 @@ addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
 source("algorithms/mobafeas.R")
 addAlgorithm(name = "mobafeas", reg = reg, fun = mobafeas)
 
-
-
 addExperiments(reg = reg, 
   prob.designs = pdes,
-  algo.designs = list(BOCS = ades.BOCS), 
+  algo.designs = list(BOCS = ades.BOCS, 
     #randomsearch = ades.randomsearch),
     mobafeas = ades.mobafeas), 
   repls = REPLICATIONS)

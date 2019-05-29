@@ -68,6 +68,7 @@ ades.mobafeas = CJ(learner = c("SVM"),
 			cv.iters = CV.ITERS,
 			infill.opt = "mosmafs",
 			infill = c("cb"),
+			kernel = "hamming",
 			ninit = NINIT, 
 			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
