@@ -69,7 +69,7 @@ ades.MBO = CJ(learner = c("SVM"),
 			infill.opt = "mosmafs",
 			infill = c("cb"),
 			ninit = NINIT, 
-			joint.hyperpars = c(TRUE),
+			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 
 
