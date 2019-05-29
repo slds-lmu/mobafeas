@@ -67,9 +67,9 @@ BOCS = function(data, job, instance, learner,
   y.hout = c()
   y.train = c()
 
-  for (i in 1:nrow(design)) {
+  for (i in 1:nrow(res)) {
       args = list()
-      args$selector.selection = as.logical(design[i, ])
+      args$selector.selection = as.logical(res[i, ])
       learner = cpoSelector() %>>% checkLearner(lrn.tuned, type = getTaskType(train.task))      
       lrn.feat = setHyperPars2(learner, par.vals = args)
       model = train(lrn.feat, train.task)

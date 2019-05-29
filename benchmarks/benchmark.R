@@ -67,8 +67,11 @@ for (i in 1:length(datasets)) {
 # addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
 
 source("algorithms/BOCS.R")
-
 addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
+
+source("algorithms/mobafeas.R")
+addAlgorithm(name = "mobafeas", reg = reg, fun = mobafeas)
+
 
 
 addExperiments(reg = reg, 
