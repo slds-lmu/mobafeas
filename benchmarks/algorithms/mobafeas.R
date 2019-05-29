@@ -1,5 +1,5 @@
 mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, cv.iters, 
-  ninit, objective, kernel) {
+  ninit, objective, kernel, joint.hyperpars) {
 
   # --- task and learner ---
   train.task = instance$train.task

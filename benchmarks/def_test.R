@@ -70,6 +70,7 @@ ades.mobafeas = CJ(learner = c("SVM"),
 			infill = c("cb"),
 			kernel = "hamming",
 			ninit = NINIT, 
+			objective = c(TRUE),
 			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 
