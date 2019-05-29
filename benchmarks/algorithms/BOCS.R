@@ -5,28 +5,49 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
   # --- task and learner ---
   train.task = instance$train.task
   test.task = instance$test.task # for outer evaluation
-
-  lrn = LEARNERS[[learner]]
-
-  # --- choose hyperparameters independently 
-  # --- random search tuning
   
+  # --- learner and paramset
+  lrn = LEARNERS[[learner]]
+  ps = PAR.SETS[[learner]]
 
+  # --- inner resampling
+  inner = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 
-  # --- inner resampling ---
-  stratcv = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
+  # --- 1. choose hyperparameters independently 
+  # --- on full feature set
 
- 
+  # configure random search tuning 
+  tune.iters = maxeval
+  ctrl = makeTuneControlRandom(maxit = tune.iters)
+  
+  lrn.wrp = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl, show.info = FALSE)
+
+  # tune the tuning
+  time = proc.time()
+
+  parallelMap::parallelStartMulticore(cpus = 8L) 
+  # parallelMap::parallelStartSocket(cpus = 8L) 
+  
+  mod = train(lrn.wrp, train.task)
+
+  # getBMRTuneResults(r$bmr)
+  parallelMap::parallelStop()
+
+  tuneres = getTuneResult(mod)
+  lrn.tuned = setHyperPars(lrn, par.vals = tuneres$x)
+  
+  timetune = proc.time() - time 
+
   # --- we do not tune over parameters ---
   setwd("BOCS/BOCSpy")
   source_python("../../runBOCS.py")
 
-  saveRDS(lrn, "lrn.rds")
-  saveRDS(task.train, "tasktrain.rds")
-  saveRDS(stratcv, "stratcv.rds")
+  saveRDS(lrn.tuned, "lrn.rds")
+  saveRDS(train.task, "tasktrain.rds")
+  saveRDS(inner, "stratcv.rds")
 
-  p = getTaskNFeats(task.train)
-  ninit = ninit(task.train)
+  p = getTaskNFeats(train.task)
+  ninit = 10L
 
   time = proc.time()
 

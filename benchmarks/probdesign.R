@@ -13,7 +13,7 @@ LEARNERS = list("SVM" = makeLearner("classif.ksvm", kernel = "rbfdot"),
 	"kknn" = makeLearner("classif.kknn"),
 	"xgboost" = makeLearner("classif.xgboost", id = "classif.xgboost", eval_metric = "error", objective = "binary:logistic")
 	)
-# 
+
 # Tuning parameter sets to be benchmarked
 # TODO: We will tune over numerical parameters only
 # 		check if kknn can be done
@@ -28,7 +28,7 @@ PAR.SETS = list(
 		makeDiscreteParam("kernel", values = c("rectangular", "optimal", "triangular", "biweight"))
 	),
 	xgboost = makeParamSet(
-	  	makeIntegerParam("nrounds", lower = 1L, upper = 5000L),	
+	  	makeIntegerParam("nrounds", lower = 1L, upper = 2000L),	
 	  	makeNumericParam("eta", lower = 0.01, upper = 0.2),
 	  	makeNumericParam("gamma", lower = -7, upper = 6, trafo = function(x) 2^x),
 	  	makeIntegerParam("max_depth", lower = 3, upper = 20),
@@ -42,7 +42,10 @@ PAR.SETS = list(
 
 
 OBJECTIVES = list(
-		"SO" = FALSE,
-		"MO" = TRUE,
-		"scalar" = function(perf, featfrac) perf + featfrac
+		# only tune the accuracy
+		"SO" = FALSE, 
+		# tune accuracy and #nfeat at the same time
+		"MO" = TRUE,  
+		# tune weighted sum of acc and nfeat
+		"scalar" = function(perf, featfrac) perf + featfrac 
 	)
