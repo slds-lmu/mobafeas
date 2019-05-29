@@ -1,4 +1,5 @@
-mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, surrogate, cv.iters, ninit, obejctive) {
+mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, cv.iters, 
+  ninit, objective, kernel) {
 
   # --- task and learner ---
   train.task = instance$train.task
@@ -7,23 +8,43 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, s
   lrn = LEARNERS[[learner]]
 
   # --- inner resampling ---
-  stratcv = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
+  inner = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 
   # --- number of features ---
   p = getTaskNFeats(train.task)
   ps = PAR.SETS[[learner]]
 
-  if (is.null(ps)) {
-   obj = makeMobafeasObjective(learner = lrn, task = train.task, resampling = stratcv,
-    multi.objective = OBJECTIVES[[objective]], holdout.data = test.task)   
-  } else {
-   obj = makeMobafeasObjective(learner = lrn, task = train.task, resampling = stratcv,
-    ps = ps, multi.objective = OBJECTIVES[[objective]], holdout.data = test.task)   
+  timetune = NA
+
+  if (!joint.hyperpars) {
+    # --- do randomsearch
+      tune.iters = maxeval
+      ctrl = makeTuneControlRandom(maxit = tune.iters)
+      
+      lrn.wrp = makeTuneWrapper(lrn, resampling = inner, 
+        par.set = ps, control = ctrl, show.info = FALSE)
+
+      # tune the tuning
+      time = proc.time()
+
+      # parallelMap::parallelStartMulticore(cpus = 8L) 
+      # parallelMap::parallelStartSocket(cpus = 8L) 
+      
+      mod = train(lrn.wrp, train.task)
+
+      tuneres = getTuneResult(mod)
+      lrn = setHyperPars(lrn, par.vals = tuneres$x)
+      
+      timetune = proc.time() - time
+
+      ps = pSS()
   }
 
-  ps.obj = getParamSet(obj)
+  mfo = makeMobafeasObjective(lrn, train.task, ps, inner, holdout.data = test.task,
+      multi.objective = objective)
 
-  # configure infill optimization
+  ps.obj = getParamSet(mfo)
+
   mutator.simple = combine.operators(ps.obj,
     numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
     integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
@@ -34,9 +55,12 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, s
     integer = recPCrossover,
     selector.selection = recPCrossover)
 
-  mosmafs.config = MosmafsConfig(mutator.simple, crossover.simple, list(mosmafsTermStagnationObjStatistic(3)))
+  mosmafs.config = MosmafsConfig(mutator.simple, crossover.simple,
+    list(mosmafsTermStagnationObjStatistic(3)))
 
-  surrogate = constructMBFLearner(ps.obj, kernelMBFHamming())
+  ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(300)
+
+  surrogate = constructMBFLearner(ps.obj, KERNELS[[kernel]])
   
   ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(maxeval)
 
@@ -45,12 +69,11 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, s
   time = proc.time()
 
   # parallelStartMulticore(cpus = 15L)
-  result = mobafeasMBO(obj, initials, surrogate, ctrl, show.info = TRUE)
+  result = mobafeasMBO(mfo, initials, surrogate, ctrl, show.info = TRUE)
 
   # parallelStop()
 
   runtime = proc.time() - time
 
-
-  return(list(result = result, task.test = task.test, task.train = task.train, runtime = runtime))
+  return(list(result = result, task.test = task.test, task.train = task.train, runtime = runtime, tunetime = timetune))
 }

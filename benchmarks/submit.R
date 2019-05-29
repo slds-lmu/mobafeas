@@ -3,8 +3,8 @@ library(stringi)
 library(dplyr)
 
 resources.serial = list(
-	walltime = 3600L * 48L, memory = 1024L * 4L,
-	clusters = "serial", max.concurrent.jobs = 1200L # get name from lrz homepage)
+	walltime = 3600L * 48L, memory = 1024L * 2L,
+	clusters = "serial" # get name from lrz homepage)
 )
 
 resources.ivymuc = list(ncpus = 15L, 
@@ -29,26 +29,8 @@ reg = loadRegistry("registry_test", writeable = TRUE)
 tab = summarizeExperiments(by = c("job.id", "algorithm", 
 	"problem", "learner", "maxeval", "cv.iters", "sim_anneal", 
 	"lambda", "ninit", "objective"))
+tosubmit = tab[objective == "SO", ]
 
-source("probdesign.R")
-
-res = testJob(1) 
-
-submitJobs(3L, resources = resources.mpp2)
+submitJobs(tosubmit, resources = resources.mpp2)
 
 # --- LRZ ivymuc ---  
-
-# run on ivymuc: 
-# USPS, clean1, 
-
-lrn = "xgboost"
-tosubmit = tab[learner %in% lrn, ]
-tosubmit = tosubmit[problem %in% problems.serial, ]
-tosubmit = ijoin(experiments2, tosubmit)
-
-chunk.size = 2L
-tosubmit$chunk = 1
-nchunks = nrow(tosubmit) / chunk.size
-tosubmit$chunk = rep(1:nchunks, each = chunk.size)
-
-submitJobs(tosubmit[1001:1200, ], resources = resources.serial)
