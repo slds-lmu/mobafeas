@@ -67,8 +67,7 @@ BOCS = function(data, job, instance, learner,
 
   # --- getting result in the right shape
   res = as.data.frame(rbind(z[[1]]$x_vals, z[[2]]))
-  y = c(z[[1]]$y_vals, z[[3]])
-  res$y = - y
+  y = c(z[[1]]$y_vals, z[[3]])  
 
   y.hout = c()
   y.train = c()
@@ -85,6 +84,7 @@ BOCS = function(data, job, instance, learner,
       y.hout = c(y.hout, performance(prd)[1])
   }
   
+  res$y = - y
   res$hout = y.hout
   res$y.train = y.train
 
