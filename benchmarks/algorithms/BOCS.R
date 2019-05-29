@@ -88,6 +88,6 @@ BOCS = function(data, job, instance, learner,
   res$hout = y.hout
   res$y.train = y.train
 
-  return(list(result = res, task.test = task.test, task.train = task.train, runtime = runtime, tunetime = timetune))
+  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune))
 } 
 
