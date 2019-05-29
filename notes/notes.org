@@ -20,7 +20,7 @@ ps <- pSS(k: numeric[0, 4] [[trafo = function(x) round(exp(x))]])
 #+END_SRC
 - user creates objective
 #+BEGIN_SRC R
-obj <- makeMobafeasObjective(lrn, task, ps, cv5)
+obj <- mak0eMobafeasObjective(lrn, task, ps, cv5)
 # optional: measure, holdout.data, worst.measure, cpo
 #+END_SRC
 - user creates initial design, or doesn't

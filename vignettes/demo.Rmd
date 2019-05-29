@@ -17,6 +17,7 @@ library("mlr")
 library("mlrCPO")
 
 library("mlrMBO")
+library("mosmafs")
 library("mobafeas")
 
 library("magrittr")
@@ -56,9 +57,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+MoBaFeaS uses Model Based Optimization (as supplied by the [`mlrMBO`](https://github.com/mlr-org/mlrMBO) package) to perform (wrapper-based) feature selection, either with or without simultaneous hyperparameter tuning, and with or without treating the problem as a multi-objective optimization problem.
+
 ## Using MoBaFeaS
 
-`mobafeas` doesn't do anything right now.
+First some related packages need to be loaded.
 
 ```{r, eval = FALSE}
 library("mlrMBO")
@@ -67,6 +70,147 @@ library("ggplot2")
 library("ParamHelpers")
 library("mlr")
 library("mlrCPO")
+library("mosmafs")
 library("mobafeas")
 ```
 
+### Objective
+
+At first, an objective function needs to be defined. It is easiest to use the `makeMobafeasObjective()` function for this. It takes the base learner and the task to be evaluated, and also makes it possible to perform simultaneous evaluation on a holdout dataset (that the underlying optimizer does not regard for optimization). The `multi.objective` option can be either `TRUE` (performing multi-objective optimization, one objective being the proportion of features being used), `FALSE` (performing single-objective optimization on performance alone), or a function. If `multi.objective` is a function, it is called after each evaluation with the performance value, and the feature fraction value, and its return-value is (single-objective) minimized.
+
+It is possible to specify a parameter set to be optimized, in which case hyperparameters and selected features are tuned jointly.
+
+```{r}
+lrn <- makeLearner("classif.knn", k = 5)
+tsk <- pid.task
+
+# single-objective
+objective.so <- makeMobafeasObjective(lrn, tsk, resampling = cv10,
+  multi.objective = FALSE)
+
+# multi-objective
+objective.mo <- makeMobafeasObjective(lrn, tsk, resampling = cv10,
+  multi.objective = TRUE)
+
+# scalarized: sum of misclassification rate and feature fraction
+objective.sc <- makeMobafeasObjective(lrn, tsk, resampling = cv10,
+  multi.objective = function(perf, featfrac) perf + featfrac)
+
+# joint tuning of hyperparameter 'k' and feature selection
+objective.joint.mo <- makeMobafeasObjective(lrn, tsk, resampling = cv10,
+  ps = pSS(k: numeric[0, 1] [[trafo = function(x) round(50 ^ x)]]),
+  multi.objective = TRUE)
+```
+
+### Infill Optimization
+
+Because MoBaFeaS uses model-based optimization, it is necessary to specify the infill optimization method. The [`mosmafs`](https://github.com/compstat-lmu/mosmafs) package's mixed integer evolutionary strategy capability is used here. One needs to specify the mutation, recombination, selection and survival operators and other mosmafs settings in a mosmafs configuration object. The mutation and recombination operators should be created using `mosmafs::combine.operators()`; the `selector.selection` mutation operation should usually involve something hamming-weight preserving.
+
+Note that the parameter set on which the operators are defined is the parameter set of the objective, *not* the parameter set of the learner given to `makeMobafeasObjective`. This is because `makeMobafeasObjective` adds the `selector.selection` parameter.
+
+In the following example, all parameter sets for `objective.*` happen to be identical save the `objective.joint.mo` one (because it includes the `k` parameter). Therefore, our examples only need two mosmafs configuration objects
+
+```{r}
+ps.obj <- getParamSet(objective.so)
+ps.obj
+```
+```{r}
+ps.joint.obj <- getParamSet(objective.joint.mo)
+ps.joint.obj
+```
+```{r, message = FALSE}
+mutator.simple <- combine.operators(ps.obj,
+  numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
+  integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
+  selector.selection = mutBitflipCHW)
+
+crossover.simple <- combine.operators(ps.obj,
+  numeric = recPCrossover,
+  integer = recPCrossover,
+  selector.selection = recPCrossover)
+
+mosmafs.config <- MosmafsConfig(mutator.simple, crossover.simple, 10)
+```
+```{r, message = FALSE}
+mutator.joint.simple <- combine.operators(ps.joint.obj,
+  numeric = ecr::setup(mutGaussScaled, sdev = 0.1),
+  integer = ecr::setup(mutGaussIntScaled, sdev = 0.1),
+  selector.selection = mutBitflipCHW)
+
+crossover.joint.simple <- combine.operators(ps.joint.obj,
+  numeric = recPCrossover,
+  integer = recPCrossover,
+  selector.selection = recPCrossover)
+
+mosmafs.joint.config <- MosmafsConfig(mutator.joint.simple,
+  crossover.joint.simple, 10)
+```
+
+### Surrogate Model Learner
+
+The surrogate model being optimized can, in prinziple, be any [`mlr`](https://github.com/mlr-org/mlr) `Learner` that performs `"se"` prediction (i.e. predicts a value and its estimated uncertainty). It is recommended to use either the `randomForest` model (recommended settings are conveniently provided by the `constructRFSurrogate()` function), or a Gaussian Process. `constructMBFLearner()` constructs a Gaussian Process Learner (from the [`kergp`](https://cran.r-project.org/package=kergp) package; note it is highly recommended to use the [modified version provided by the MoBaFeaS package authors](https://github.com/mb706/kergp)) with a special kernel for the feature selection part. Use the `kernelMBF*()` functions to define this kernel. The hyperparameter kernel can be a Matern 5/2, Matern 3/2, Exponential or Gaussian kernel. Our Example uses the Hamming distance kernel for the feature configuration vector and the (default) Matern 3/2 kernel for the hyperparameters.
+
+```{r}
+surrogate <- constructMBFLearner(ps.obj, kernelMBFHamming())
+surrogate.joint <- constructMBFLearner(ps.joint.obj, kernelMBFHamming())
+```
+
+### MoBaFeaS Run Configuration
+
+At last the MBO run itself needs to be configured. It is possible to choose different infill criteria (available are *Expected Improvement* `InfillEI()` (the default), *Confidence Bound* `InfillCB()`, and *Response* `InfillResponse()`). In the future it may be possible to change the number of points being proposed simultaneously.
+
+The termination criterion can be set using the `mlrMBO::setMBOControlTermination()` function. This vignette performs relatively short runs; To get adequate performance for large datasets, it may be necessary to perform hundreds or even thousands of evaluations.
+
+```{r}
+ctrl <- makeMBFControl(mosmafs.config) %>%
+  setMBOControlTermination(10)
+
+ctrl.joint <- makeMBFControl(mosmafs.joint.config) %>%
+  setMBOControlTermination(10)
+```
+
+### Initial Population
+
+The initial design matrix for which to evaluate individuals is given to `mobafeasMBO()` in form of a list of individuals. These individuals can be generated the same way as in `mosmafs`: Using the `ParamHelpers::sampleValues()` function, aided by the `mosmafs::initSelector()` function.
+
+```{r}
+initials <- sampleValues(ps.obj, 10, discrete.names = TRUE) %>%
+  initSelector()
+initials.joint <- sampleValues(ps.joint.obj, 10, discrete.names = TRUE) %>%
+  initSelector()
+```
+
+### Running Optimization
+
+Optimization runs are started using the `mobafeasMBO()` call.
+
+```{r, results = "hide"}
+opt.so <- mobafeasMBO(objective.so, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide"}
+opt.mo <- mobafeasMBO(objective.mo, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide"}
+opt.sc <- mobafeasMBO(objective.sc, initials, surrogate, ctrl, show.info = FALSE)
+```
+```{r, results = "hide"}
+opt.joint.mo <- mobafeasMBO(objective.joint.mo, initials.joint, surrogate.joint,
+  ctrl.joint, show.info = FALSE)
+```
+
+### Analysing Results
+
+Use the `collectMBFResult()` function to collect results.
+
+```{r}
+collectMBFResult(opt.so)
+```
+```{r}
+collectMBFResult(opt.mo)
+```
+```{r}
+collectMBFResult(opt.sc)
+```
+```{r}
+collectMBFResult(opt.joint.mo)
+```

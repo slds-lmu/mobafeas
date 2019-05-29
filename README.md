@@ -6,19 +6,19 @@
 
 ## Project Status
 
-This project is work in progress, it will probably not be useful in its current state. This project may or may not get merged with [`mosmafs`](/compstat-lmu/mosmafs) eventually.
+This project is work in progress, it will probably not be useful in its current state. This project may or may not get merged with [`mosmafs`](https://github.com/compstat-lmu/mosmafs) eventually.
 
 ## Installation
 
-To install, use `devtools`:
+To install, use `devtools`. Dependencies are [`mosmafs`](https://github.com/compstat-lmu/mosmafs) and a [modified version of `kergp`](https://github.com/mb706/kergp).
 
 ```r
+devtools::install_github("mb706/kergp")
+devtools::install_github("compstat-lmu/mosmafs", ref = "mosmafs-package")
 devtools::install_github("compstat-lmu/mobafeas")
 ```
 
 ## Documentation
-
-(basically empty right now)
 
 * [Introduction](https://compstat-lmu.github.io/mobafeas/articles/demo.html)
 

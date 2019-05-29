@@ -22,11 +22,19 @@ Imports:
   MASS,
   smoof,
   mlrCPO (>= 0.3.4),
+  mosmafs,
   mlr,
-  parallelMap
+  parallelMap,
+  rgenoud,
+  magrittr,
+  ecr
 Suggests:
   knitr,
-  magrittr,
   testthat,
-  praznik
+  praznik,
+  class
+Remotes:
+  jakobbossek/ecr2,
+  mb706/kergp,
+  compstat-lmu/mosmafs@mosmafs-package
 RoxygenNote: 6.1.1
