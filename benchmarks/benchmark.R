@@ -6,6 +6,10 @@ library("reticulate")
 library("smoof")
 library("batchtools")
 library("data.table")
+library("parallelMap")
+library("magrittr")
+library("ParamHelpers")
+library("mobafeas")
 
 # --- create test environment ?
 TEST = TRUE
@@ -62,7 +66,7 @@ for (i in 1:length(datasets)) {
 source("../algorithms/randomsearch.R")
 source("../algorithms/randomsearch.R")
 
-addAlgorithm(name = "randomsearch_SO", reg = reg, fun = randomsearch)
+addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
 
 addExperiments(reg = reg, 
   prob.designs = pdes,

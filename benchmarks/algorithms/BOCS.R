@@ -8,6 +8,11 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
 
   lrn = LEARNERS[[learner]]
 
+  # --- choose hyperparameters independently 
+  # --- random search tuning
+  
+
+
   # --- inner resampling ---
   stratcv = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 

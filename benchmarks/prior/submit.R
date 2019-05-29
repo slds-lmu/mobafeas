@@ -25,4 +25,4 @@ tosubmit$chunk = 1
 nchunks = nrow(tosubmit) / chunk.size
 tosubmit$chunk = rep(1:nchunks, each = chunk.size)
 
-submitJobs(tosubmit[33:56, ], resources = resources.mpp2)
+submitJobs(tosubmit[job.id %in% 49:72, ], resources = resources.mpp2)

@@ -1,6 +1,11 @@
 ## TODO: Benchmark design
 
-packages = c("batchtools", "ecr", "magrittr", "mosmafs", "ParamHelpers", "mlr", "mlrCPO", "mlrMBO")
+packages = c("batchtools", 
+	"ecr", "mobafeas",
+	"magrittr", 
+	"mosmafs", 
+	"ParamHelpers", 
+	"mlr", "mlrCPO", "mlrMBO")
 
 # source the prob design
 source("probdesign.R")

@@ -21,3 +21,6 @@ vignettes/*.html
 *.arff
 registry_test
 BOCS
+*.png
+*.html
+*.csv
