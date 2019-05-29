@@ -4,6 +4,8 @@ BOCS = function(data, job, instance, learner,
   maxeval, cv.iters, sim_anneal, lambda, ninit,
   objective) {
 
+  file.remove("objective.R")
+
   # --- task and learner ---
   train.task = instance$train.task
   test.task = instance$test.task # for outer evaluation
