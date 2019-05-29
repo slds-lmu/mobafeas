@@ -8,11 +8,11 @@ from BOCS import BOCS
 from quad_mat import quad_mat
 from sample_models import sample_models
 
-def runBOCS(n_vars, n_init, eval_budget, sim_anneal, lamb):
+def runBOCS(n_vars, n_init, eval_budget, sim_anneal, lamb, objective):
 
 	# Define command and arguments
 	command = 'Rscript'
-	path2script = '../../objective.R'
+	path2script = "../../objective_SO.R"
 
 	# Build subprocess comman
 	cmd = [command, path2script]

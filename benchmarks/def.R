@@ -51,8 +51,9 @@ ades.BOCS = CJ(learner = c("SVM"),
 			maxeval = MAXEVAL, 
 			cv.iters = CV.ITERS,
 			sim_anneal = c(TRUE),
-			lambda = c(10^(-2)),
-			ninit = NINIT, 
+			lambda = 0,
+			ninit = NINIT,
+			objective = c("SO", "scalar") 
 			sorted = FALSE)
 
 ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
@@ -72,7 +73,7 @@ ades.MBO = CJ(learner = c("SVM", "kknn", "xgboost"),
 			sorted = FALSE)
 
 
-REPLICATIONS = 10L
+REPLICATIONS = 1L
 
 # ades.random = CJ(learner = c("SVM", "kknn", "xgboost"), 
 # 			maxeval = MAXEVAL, 

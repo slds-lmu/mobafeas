@@ -1,6 +1,8 @@
 # TODO: RESULT OBJECT SHOULD BE APPROPRIATE
 
-BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lambda, ninit) {
+BOCS = function(data, job, instance, learner, 
+  maxeval, cv.iters, sim_anneal, lambda, ninit,
+  objective) {
 
   # --- task and learner ---
   train.task = instance$train.task
@@ -20,7 +22,8 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
   tune.iters = maxeval
   ctrl = makeTuneControlRandom(maxit = tune.iters)
   
-  lrn.wrp = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl, show.info = FALSE)
+  lrn.wrp = makeTuneWrapper(lrn, resampling = inner, 
+    par.set = ps, control = ctrl, show.info = FALSE)
 
   # tune the tuning
   time = proc.time()
@@ -47,23 +50,38 @@ BOCS = function(data, job, instance, learner, maxeval, cv.iters, sim_anneal, lam
   saveRDS(inner, "stratcv.rds")
 
   p = getTaskNFeats(train.task)
-  ninit = 10L
 
   time = proc.time()
 
   # TODO: determine size of init design (!) 
+  # TODO: determine lambda
   z = runBOCS(n_vars = p, n_init = ninit, eval_budget = maxeval, sim_anneal = sim_anneal, lamb = lambda)
 
   runtime = proc.time() - time
 
-  # --- workaround to get everything in the right "shape"
-  design = as.data.frame(rbind(z[[1]]$x_vals, z[[2]]))
-  names(design) = paste("x", 1:ncol(design), sep = "")
+  # --- getting result in the right shape
+  res = as.data.frame(rbind(z[[1]]$x_vals, z[[2]]))
   y = c(z[[1]]$y_vals, z[[3]])
-  design$y = y
-  
-  result = makeMBOResult(design, ninit = ninit, p)
+  res$y = - y
 
-  return(list(result = result, task.test = task.test, task.train = task.train, runtime = runtime))
+  y.hout = c()
+  y.train = c()
+
+  for (i in 1:nrow(design)) {
+      args = list()
+      args$selector.selection = as.logical(design[i, ])
+      learner = cpoSelector() %>>% checkLearner(lrn.tuned, type = getTaskType(train.task))      
+      lrn.feat = setHyperPars2(learner, par.vals = args)
+      model = train(lrn.feat, train.task)
+      prd.model = predict(model, train.task)
+      prd = predict(model, test.task)
+      y.train = c(y.train, performance(prd.model)[1])
+      y.hout = c(y.hout, performance(prd)[1])
+  }
+  
+  res$hout = y.hout
+  res$y.train = y.train
+
+  return(list(result = res, task.test = task.test, task.train = task.train, runtime = runtime, tunetime = timetune))
 } 
 

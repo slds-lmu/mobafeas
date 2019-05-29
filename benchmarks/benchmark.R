@@ -62,15 +62,19 @@ for (i in 1:length(datasets)) {
     reg = reg
     )
 }
-source("../algorithms/randomsearch.R")
-source("../algorithms/randomsearch.R")
+# source("../algorithms/randomsearch.R")
 
-addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
+# addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
+
+source("../algorithms/BOCS.R")
+
+addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
+
 
 addExperiments(reg = reg, 
   prob.designs = pdes,
-  algo.designs = list(#BOCS = ades.BOCS, 
-    randomsearch = ades.randomsearch),
+  algo.designs = list(BOCS = ades.BOCS), 
+    #randomsearch = ades.randomsearch),
     #MBONaive = ades.mboNaive), 
   repls = REPLICATIONS)
 
