@@ -12,7 +12,7 @@ def runBOCS(n_vars, n_init, eval_budget, sim_anneal, lamb):
 
 	# Define command and arguments
 	command = 'Rscript'
-	path2script = "../../objective_SO.R"
+	path2script = "../../objective.R"
 
 	# Build subprocess comman
 	cmd = [command, path2script]

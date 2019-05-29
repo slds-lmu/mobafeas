@@ -1,10 +1,7 @@
 ## TODO: Benchmark design
 
-packages = c("batchtools", 
-	"ecr", "mobafeas",
-	"magrittr", 
-	"mosmafs", 
-	"ParamHelpers", 
+packages = c("batchtools", "ecr", "mobafeas",
+	"magrittr", "mosmafs", "ParamHelpers", 
 	"mlr", "mlrCPO", "mlrMBO", "reticulate")
 
 # source the prob design
@@ -22,7 +19,7 @@ MAXEVAL = 30L
 INFILL_OPT = list("mosmafs")
 
 # Infill crit
-INFILL = list("cb" = makeMBOInfillCritCB())
+INFILL = list("cb" = InfillCB(), "ei" = InfillEI())
 
 # Kernel
 KERNELS = list(
@@ -30,9 +27,10 @@ KERNELS = list(
     graph = kernelMBFGraph(TRUE),
     graph.multi = kernelMBFGraph(FALSE),
     agreement = kernelMBFAgreement(FALSE),
-    agreement.limited = kernelMBFAgreement(TRUE),
-    agree.cor = kernelMBFAgreeCor(data$task, FALSE),
-    agree.cor.limited = kernelMBFAgreeCor(data$task, TRUE))
+    agreement.limited = kernelMBFAgreement(TRUE)# ,
+    # agree.cor = kernelMBFAgreeCor(data$task, FALSE),
+    # agree.cor.limited = kernelMBFAgreeCor(data$task, TRUE)
+    )
 
 
 # inner resampling iterations
@@ -66,10 +64,10 @@ ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"),
 ades.mobafeas = CJ(learner = c("SVM"), 
 			maxeval = MAXEVAL, 
 			cv.iters = CV.ITERS,
-			infill = c("cb"),
+			infill = c("cb", "ei"),
 			kernel = c("hamming", "graph", "agreement"),
 			ninit = NINIT, 
-			objective = c(TRUE, FALSE),
+			objective = c("SO", "MO", "scalar"),
 			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 

@@ -41,7 +41,7 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
   }
 
   mfo = makeMobafeasObjective(lrn, train.task, ps, inner, holdout.data = test.task,
-      multi.objective = objective)
+      multi.objective = OBJECTIVES[[objective]])
 
   ps.obj = getParamSet(mfo)
 
@@ -60,8 +60,8 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
 
   surrogate = constructMBFLearner(ps.obj, KERNELS[[kernel]])
   
-  ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(maxeval - ninit)
-  ctrl$infill.crit = INFILL[[infill]]
+  ctrl = makeMBFControl(mosmafs.config, infill.crit = INFILL[[infill]]) %>% setMBOControlTermination(maxeval - ninit) 
+  # ctrl$infill.crit = INFILL[[infill]]
 
   initials = sampleValues(ps.obj, ninit, discrete.names = TRUE) %>% initSelector()
 

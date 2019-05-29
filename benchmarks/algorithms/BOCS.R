@@ -55,6 +55,12 @@ BOCS = function(data, job, instance, learner,
 
   # TODO: determine size of init design (!) 
   # TODO: determine lambda
+  if (objective == "SO")
+    file.copy("objective_SO.R", "objective.R")
+
+  if (objective == "scalar")
+    file.copy("objective_scalar.R", "objective.R")
+
   z = runBOCS(n_vars = p, n_init = ninit, eval_budget = maxeval, sim_anneal = sim_anneal, lamb = lambda)
 
   runtime = proc.time() - time
