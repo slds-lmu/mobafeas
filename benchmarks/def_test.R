@@ -12,7 +12,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 30L
+MAXEVAL = 12L
 
 # Infill optimizer
 # TODO: do we want to compare here?
@@ -38,7 +38,7 @@ KERNELS = list(
 CV.ITERS = 10L
 
 # TODO: determine the size of the initial design
-NINIT = 20L
+NINIT = 10L
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
