@@ -78,7 +78,7 @@ addExperiments(reg = reg,
   prob.designs = pdes,
   algo.designs = list(BOCS = ades.BOCS), 
     #randomsearch = ades.randomsearch),
-    #MBONaive = ades.mboNaive), 
+    mobafeas = ades.mobafeas), 
   repls = REPLICATIONS)
 
 

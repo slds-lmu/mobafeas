@@ -63,7 +63,7 @@ ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"),
 			sorted = FALSE)
 
 
-ades.MBO = CJ(learner = c("SVM"), 
+ades.mobafeas = CJ(learner = c("SVM"), 
 			maxeval = MAXEVAL, 
 			cv.iters = CV.ITERS,
 			infill.opt = "mosmafs",
