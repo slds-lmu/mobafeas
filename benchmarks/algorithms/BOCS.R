@@ -34,7 +34,7 @@ BOCS = function(data, job, instance, learner,
   mod = train(lrn.wrp, train.task)
 
   # getBMRTuneResults(r$bmr)
-  parallelMap::parallelStop()
+  # parallelMap::parallelStop()
 
   tuneres = getTuneResult(mod)
   lrn.tuned = setHyperPars(lrn, par.vals = tuneres$x)

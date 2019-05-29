@@ -66,7 +66,7 @@ for (i in 1:length(datasets)) {
 
 # addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
 
-source("../algorithms/BOCS.R")
+source("algorithms/BOCS.R")
 
 addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
 

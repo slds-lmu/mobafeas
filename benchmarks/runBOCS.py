@@ -8,7 +8,7 @@ from BOCS import BOCS
 from quad_mat import quad_mat
 from sample_models import sample_models
 
-def runBOCS(n_vars, n_init, eval_budget, sim_anneal, lamb, objective):
+def runBOCS(n_vars, n_init, eval_budget, sim_anneal, lamb):
 
 	# Define command and arguments
 	command = 'Rscript'
