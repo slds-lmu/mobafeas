@@ -62,7 +62,7 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
 
   surrogate = constructMBFLearner(ps.obj, KERNELS[[kernel]])
   
-  ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(maxeval)
+  ctrl = makeMBFControl(mosmafs.config) %>% setMBOControlTermination(maxeval - ninit)
 
   initials = sampleValues(ps.obj, ninit, discrete.names = TRUE) %>% initSelector()
 
@@ -75,5 +75,5 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
 
   runtime = proc.time() - time
 
-  return(list(result = result, task.test = task.test, task.train = task.train, runtime = runtime, tunetime = timetune))
+  return(list(result = result, task.test = test.task, task.train = task.train, runtime = runtime, tunetime = timetune))
 }
