@@ -15,7 +15,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 50L
+MAXEVAL = 25L
 
 # Infill optimizer
 # TODO: do we want to compare here?
