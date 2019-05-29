@@ -75,5 +75,5 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
 
   runtime = proc.time() - time
 
-  return(list(result = result, task.test = test.task, task.train = task.train, runtime = runtime, tunetime = timetune))
+  return(list(result = result, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune))
 }

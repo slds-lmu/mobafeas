@@ -15,7 +15,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 25L
+MAXEVAL = 30L
 
 # Infill optimizer
 # TODO: do we want to compare here?
@@ -68,9 +68,9 @@ ades.mobafeas = CJ(learner = c("SVM"),
 			cv.iters = CV.ITERS,
 			infill.opt = "mosmafs",
 			infill = c("cb"),
-			kernel = "hamming",
+			kernel = c("hamming", "graph", "agreement"),
 			ninit = NINIT, 
-			objective = c(TRUE),
+			objective = c(TRUE, FALSE),
 			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 
