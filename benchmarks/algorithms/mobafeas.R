@@ -1,43 +1,43 @@
-mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, cv.iters, 
-  ninit, objective, kernel, joint.hyperpars) {
+mobafeas = function(data, job, instance, 
+  learner, infill, cv.iters, ninit, initialization,
+  objective, kernel, joint.hyperpars, 
+  maxeval, maxtime,
+  parallelize) {
 
   # --- task and learner ---
   train.task = instance$train.task
   test.task = instance$test.task # for outer evaluation
-
   lrn = LEARNERS[[learner]]
+
+  # --- parameter set of the learner ---
+  ps = PAR.SETS[[learner]]
 
   # --- inner resampling ---
   inner = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 
-  # --- number of features ---
-  p = getTaskNFeats(train.task)
-  ps = PAR.SETS[[learner]]
+  if (parallelize)
+    parallelMap::parallelStartMulticore(cpus = 10L)
 
+  # --- do randomsearch to choose hyperpars separately
   timetune = NA
-
   if (!joint.hyperpars) {
-    # --- do randomsearch
-      tune.iters = maxeval
-      ctrl = makeTuneControlRandom(maxit = tune.iters)
+    tune.iters = maxeval
+    ctrl = makeTuneControlRandom(maxit = tune.iters)
       
-      lrn.wrp = makeTuneWrapper(lrn, resampling = inner, 
+    lrn.wrp = makeTuneWrapper(lrn, resampling = inner, 
         par.set = ps, control = ctrl, show.info = FALSE)
 
-      # tune the tuning
-      time = proc.time()
-
-      # parallelMap::parallelStartMulticore(cpus = 8L) 
-      # parallelMap::parallelStartSocket(cpus = 8L) 
+    # tune the tuning
+    time = proc.time()
       
-      mod = train(lrn.wrp, train.task)
+    mod = train(lrn.wrp, train.task)
 
-      tuneres = getTuneResult(mod)
-      lrn = setHyperPars(lrn, par.vals = tuneres$x)
+    tuneres = getTuneResult(mod)
+    lrn = setHyperPars(lrn, par.vals = tuneres$x)
       
-      timetune = proc.time() - time
+    timetune = proc.time() - time
 
-      ps = pSS()
+    ps = pSS()
   }
 
   mfo = makeMobafeasObjective(lrn, train.task, ps, inner, holdout.data = test.task,
@@ -60,19 +60,24 @@ mobafeas = function(data, job, instance, learner, maxeval, infill, infill.opt, c
 
   surrogate = constructMBFLearner(ps.obj, KERNELS[[kernel]])
   
-  ctrl = makeMBFControl(mosmafs.config, infill.crit = INFILL[[infill]]) %>% setMBOControlTermination(maxeval - ninit) 
-  # ctrl$infill.crit = INFILL[[infill]]
+  ctrl = makeMBFControl(mosmafs.config, infill.crit = INFILL[[infill]]) %>% setMBOControlTermination(iters = maxeval - ninit, time.budget = maxtime) 
 
-  initials = sampleValues(ps.obj, ninit, discrete.names = TRUE) %>% initSelector()
+  # --- initialization ---
+  initials =  sampleValues(ps.obj, ninit, discrete.names = TRUE) 
+
+  if (initialization == "unif") {
+    distribution = function() floor(runif(1, 0, length(initials[[1]]$selector.selection) + 1))
+    initials = initSelector(initials, distribution = distribution)
+  }
 
   time = proc.time()
 
-  # parallelStartMulticore(cpus = 15L)
   result = mobafeasMBO(mfo, initials, surrogate, ctrl, show.info = TRUE)
 
-  # parallelStop()
-
   runtime = proc.time() - time
+
+  if (parallelize)
+    parallelMap::parallelStop()
 
   return(list(result = result, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune))
 }

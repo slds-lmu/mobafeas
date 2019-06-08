@@ -1,7 +1,7 @@
 ## TODO: Benchmark design
 
 packages = c("batchtools", "ecr", "mobafeas",
-	"magrittr", "mosmafs", "ParamHelpers", 
+	"magrittr", "mosmafs", "ParamHelpers", "parallelMap",
 	"mlr", "mlrCPO", "mlrMBO", "reticulate")
 
 # source the prob design
@@ -12,7 +12,10 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 12L
+MAXEVAL = 22L
+
+# Maximum time 
+MAXTIME = 48 * 3600L
 
 # Infill optimizer
 # TODO: do we want to compare here?
@@ -24,8 +27,8 @@ INFILL = list("cb" = InfillCB(), "ei" = InfillEI())
 # Kernel
 KERNELS = list(
     hamming = kernelMBFHamming(),
-    graph = kernelMBFGraph(TRUE),
-    graph.multi = kernelMBFGraph(FALSE),
+    # graph = kernelMBFGraph(TRUE),
+    graph.limited = kernelMBFGraph(FALSE),
     agreement = kernelMBFAgreement(FALSE),
     agreement.limited = kernelMBFAgreement(TRUE)# ,
     # agree.cor = kernelMBFAgreeCor(data$task, FALSE),
@@ -35,10 +38,10 @@ KERNELS = list(
 
 # inner resampling iterations
 # TODO: keep it that high?
-CV.ITERS = 10L
+CV.ITERS = 3L
 
 # TODO: determine the size of the initial design
-NINIT = 10L
+NINIT = 20L
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
@@ -52,6 +55,7 @@ ades.BOCS = CJ(learner = c("SVM"),
 			lambda = 0,
 			ninit = NINIT,
 			objective = c("SO", "scalar"), 
+			parallelize = TRUE, 
 			sorted = FALSE)
 
 ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
@@ -63,14 +67,15 @@ ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"),
 
 ades.mobafeas = CJ(learner = c("SVM"), 
 			maxeval = MAXEVAL, 
+			maxtime = MAXTIME,
 			cv.iters = CV.ITERS,
 			infill = c("cb", "ei"),
-			kernel = c("hamming", "graph", "agreement"),
+			kernel = c("hamming", "graph.limited", "agreement"),
 			ninit = NINIT, 
 			objective = c("SO", "MO", "scalar"),
+			parallelize = TRUE,
 			joint.hyperpars = c(TRUE, FALSE),
 			sorted = FALSE)
 
 
 REPLICATIONS = 1L
-
