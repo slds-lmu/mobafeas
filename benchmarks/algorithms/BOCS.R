@@ -70,7 +70,7 @@ BOCS = function(data, job, instance, learner, initialization,
       sstask = subsetTask(train.task, features = feats)
 
       # --- perform resampling 
-      r = resample(lrn, sstask, inner, show.info = FALSE)
+      r = resample(lrn, sstask, inner, show.info = TRUE)
       as.numeric(r$aggr[1]) 
     }
   }
