@@ -3,8 +3,7 @@
 # ---
 
 
-mobafeas = function(data, job, instance, learner, infill, cv.iters, ninit, initialization,
-  objective, kernel, joint.hyperpars, maxeval, maxtime, parallelize) {
+mobafeas = function(data, job, instance, learner, cv.iters, maxeval, parallelize) {
 
   # ---
   # 0. Define task, learner, and inner resampling
@@ -15,6 +14,8 @@ mobafeas = function(data, job, instance, learner, infill, cv.iters, ninit, initi
 
   train.task = instance$train.task # training
   test.task = instance$test.task # for outer evaluation
+  p = getTaskNFeats(train.task)
+
 
   inner = makeResampleDesc("CV", iters = cv.iters, stratify = TRUE)
 
@@ -29,28 +30,42 @@ mobafeas = function(data, job, instance, learner, infill, cv.iters, ninit, initi
   # 2. As baseline consider the case of no joint optimization
   # --- 
 
-  timetune = NA
+  tune.iters = maxeval # number of tuning iterations = number of maximum evaluations
 
-  if (!joint.hyperpars) {
-
-    tune.iters = maxeval # number of tuning iterations = number of maximum evaluations
-
-    ctrl = makeTuneControlRandom(maxit = tune.iters) 
-      
-    lrn.wrp = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl, show.info = FALSE)
-
-    time = proc.time()
-      
-    mod = train(lrn.wrp, train.task)
-
-    tuneres = getTuneResult(mod)
+  ctrl = makeTuneControlRandom(maxit = tune.iters) 
     
-    lrn = setHyperPars(lrn, par.vals = tuneres$x)
-      
-    timetune = proc.time() - time
+  lrn.wrp = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl, show.info = FALSE)
 
-    ps = pSS()
-  }
+  time = proc.time()
+    
+  mod = train(lrn.wrp, train.task)
+
+  tuneres = getTuneResult(mod)
+  
+  lrn = setHyperPars(lrn, par.vals = tuneres$x)
+    
+  timetune = proc.time() - time
+
+  config = data.frame(matrix(rep(0, p), nrow = 1))
+  names(config) = paste("selector.selection", 1:p, sep = "")
+
+  config = cbind(do.call(cbind, tuneres$x), config)
+  config$y = tuneres$y
+
+  dummyFun = makeMobafeasObjective(lrn, train.task, ps, inner, holdout.data = test.task)
+  dummyLrn = constructMBFLearner(getParamSet(dummyFun))
+  dummyCtrl = makeMBOControl()
+
+  population = sampleValues(getParamSet(dummyFun), 1)
+  df = listToDf(population, getParamSet(dummyFun))
+  
+
+  res = mbo(fun = dummyFun, design = config, learner = dummyLrn, control = dummyCtrl)
+
+
+
+
+
 
 
 

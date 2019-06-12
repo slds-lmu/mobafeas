@@ -1,4 +1,3 @@
-## TODO: Benchmark design
 
 packages = c("batchtools", "ecr", "mobafeas",
 	"magrittr", "mosmafs", "ParamHelpers", "parallelMap",
