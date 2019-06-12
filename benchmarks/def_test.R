@@ -7,7 +7,7 @@ packages = c("batchtools", "ecr", "mobafeas",
 # source the prob design
 source("probdesign.R")
 
-OVERWRITE = FALSE
+OVERWRITE = TRUE
 
 datafolder = "data"
 
@@ -42,6 +42,7 @@ CV.ITERS = 3L
 
 # TODO: determine the size of the initial design
 NINIT = 20L
+
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
