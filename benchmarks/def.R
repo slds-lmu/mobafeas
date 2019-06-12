@@ -12,7 +12,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 500L
+MAXEVAL = 350L
 
 # Maximum time 
 MAXTIME = 48 * 3600L
@@ -55,14 +55,8 @@ ades.BOCS = CJ(learner = c("SVM"),
 			lambda = 0,
 			ninit = NINIT,
 			objective = c("SO", "scalar"), 
-			parallelize = TRUE, 
-			initialization = c("uniform", "binom"),
-			sorted = FALSE)
-
-ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
-			maxeval = MAXEVAL, 
-			cv.iters = CV.ITERS,
-			tune_hyperpars = c(TRUE, FALSE),
+			parallelize = FALSE, 
+			initialization = c("unif", "binom"),
 			sorted = FALSE)
 
 
@@ -74,9 +68,9 @@ ades.mobafeas = CJ(learner = c("SVM"),
 			kernel = c("hamming", "graph.limited", "agreement"),
 			ninit = NINIT, 
 			objective = c("SO", "MO", "scalar"),
-			parallelize = TRUE,
+			parallelize = FALSE,
 			joint.hyperpars = c(TRUE, FALSE),
-			initialization = c("uniform", "binom"),
+			initialization = c("unif", "binom"),
 			sorted = FALSE)
 
 

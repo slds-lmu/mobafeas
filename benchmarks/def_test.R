@@ -55,14 +55,10 @@ ades.BOCS = CJ(learner = c("SVM"),
 			lambda = 0,
 			ninit = NINIT,
 			objective = c("SO", "scalar"), 
-			parallelize = TRUE, 
+			parallelize = FALSE, 
+			initialization = c("unif", "binom"),
 			sorted = FALSE)
 
-ades.randomsearch = CJ(learner = c("SVM", "kknn", "xgboost"), 
-			maxeval = MAXEVAL, 
-			cv.iters = CV.ITERS,
-			tune_hyperpars = c(TRUE, FALSE),
-			sorted = FALSE)
 
 
 ades.mobafeas = CJ(learner = c("SVM"), 
@@ -70,12 +66,12 @@ ades.mobafeas = CJ(learner = c("SVM"),
 			maxtime = MAXTIME,
 			cv.iters = CV.ITERS,
 			infill = c("cb", "ei"),
-			kernel = c("hamming", "graph.limited", "agreement"),
+			kernel = c("hamming", "graph.limited", "agreement.limited"),
 			ninit = NINIT, 
 			objective = c("SO", "MO", "scalar"),
-			parallelize = TRUE,
+			parallelize = FALSE,
 			joint.hyperpars = c(TRUE, FALSE),
+			initialization = c("unif", "binom"),
 			sorted = FALSE)
-
 
 REPLICATIONS = 1L

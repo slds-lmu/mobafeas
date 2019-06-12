@@ -1,6 +1,6 @@
 # TODO: RESULT OBJECT SHOULD BE APPROPRIATE
 
-BOCS = function(data, job, instance, learner, 
+BOCS = function(data, job, instance, learner, initialization,
   maxeval, maxtime, cv.iters, sim_anneal, lambda, ninit,
   objective, parallelize) {
 
@@ -59,7 +59,7 @@ BOCS = function(data, job, instance, learner,
       sstask = subsetTask(train.task, features = feats)
 
       # --- perform resampling 
-      r = resample(lrn, sstask, inner)
+      r = resample(lrn, sstask, inner, show.info = TRUE)
       as.numeric(r$aggr[1] + mean(feats)) 
     }
   } else {
@@ -70,7 +70,7 @@ BOCS = function(data, job, instance, learner,
       sstask = subsetTask(train.task, features = feats)
 
       # --- perform resampling 
-      r = resample(lrn, sstask, inner)
+      r = resample(lrn, sstask, inner, show.info = FALSE)
       as.numeric(r$aggr[1]) 
     }
   }

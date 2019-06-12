@@ -62,9 +62,7 @@ for (i in 1:length(datasets)) {
     reg = reg
     )
 }
-# source("../algorithms/randomsearch.R")
 
-# addAlgorithm(name = "randomsearch", reg = reg, fun = randomsearch)
 
 source("algorithms/BOCS.R")
 addAlgorithm(name = "BOCS", reg = reg, fun = BOCS)
@@ -75,6 +73,6 @@ addAlgorithm(name = "mobafeas", reg = reg, fun = mobafeas)
 addExperiments(reg = reg, 
   prob.designs = pdes,
   algo.designs = list(
-    BOCS = ades.BOCS, 
-    mobafeas = ades.mobafeas), 
+  BOCS = ades.BOCS, 
+  mobafeas = ades.mobafeas), 
   repls = REPLICATIONS)
