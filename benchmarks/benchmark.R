@@ -12,7 +12,7 @@ library("ParamHelpers")
 library("mobafeas")
 
 # --- create test environment ?
-TEST = TRUE
+TEST = FALSE
 
 if (TEST) {
   deffile = "def_test.R"
