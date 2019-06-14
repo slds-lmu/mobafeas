@@ -37,7 +37,7 @@ KERNELS = list(
 
 # inner resampling iterations
 # TODO: keep it that high?
-CV.ITERS = 2L
+CV.ITERS = 3L
 
 # TODO: determine the size of the initial design
 NINIT = 30L
