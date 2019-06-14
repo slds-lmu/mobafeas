@@ -94,37 +94,25 @@ BOCS = function(data, job, instance, learner, initialization,
 
   z = BOCS$BOCS(inputs, 2L, 'SA')
 
-  mfo = makeMobafeasObjective(lrn, train.task, ps, inner, holdout.data = test.task,
+  mfo = makeMobafeasObjective(lrn, train.task, ps, cv3, holdout.data = test.task,
         multi.objective = OBJECTIVES[[objective]])
   
   runtime = proc.time() - time
 
+  design = data.frame(rbind(inputs$x_vals, z[[1]]))
+  names(design) = paste("selector.selection", 1:getTaskNFeats(train.task), sep = "")
+  design$y = c(inputs$yvals, z[[2]])
+
+  # workaround to get the proper result object
+  ctrl = makeMBOControl()
+  ctrl = setMBOControlTermination(ctrl, time.budget = 10)
+
+  res = mbo(fun = mfo, learner = makeLearner("regr.randomForest", predict.type = "se"), design = design, control = ctrl)
+
   if (parallelize)
     parallelMap::parallelStop()
 
-  # --- getting result in the right shape
-  res = as.data.frame(rbind(inputs$x_vals, z[[1]]))
-  y = c(inputs$yvals, z[[2]])
 
-  y.hout = c()
-  y.train = c()
-
-  for (i in 1:nrow(res)) {
-      args = list()
-      args$selector.selection = as.logical(res[i, ])
-      learner = cpoSelector() %>>% checkLearner(lrn, type = getTaskType(train.task))      
-      lrn.feat = setHyperPars2(learner, par.vals = args)
-      model = train(lrn.feat, train.task)
-      prd.model = predict(model, train.task)
-      prd = predict(model, test.task)
-      y.train = c(y.train, performance(prd.model)[1])
-      y.hout = c(y.hout, performance(prd)[1])
-  }
-  
-  res$y = y
-  res$hout = y.hout
-  res$y.train = y.train
-
-  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune))
+  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune, y = ))
 } 
 
