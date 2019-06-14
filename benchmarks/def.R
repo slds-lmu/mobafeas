@@ -11,7 +11,7 @@ OVERWRITE = FALSE
 datafolder = "data"
 
 # Maximum number of evaluations allowed
-MAXEVAL = 120L
+MAXEVAL = 30L
 
 # Maximum time 
 MAXTIME = 48 * 3600L
@@ -37,10 +37,10 @@ KERNELS = list(
 
 # inner resampling iterations
 # TODO: keep it that high?
-CV.ITERS = 10L
+CV.ITERS = 2L
 
 # TODO: determine the size of the initial design
-NINIT = 100L
+NINIT = 30L
 
 # problem design gives the resampling iteration
 pdes = lapply(names(datasets), function(x) data.table(rinst.iter = 1:10))
