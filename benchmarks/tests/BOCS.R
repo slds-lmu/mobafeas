@@ -15,7 +15,7 @@ instance = list(train.task = readRDS("data/sonar/task.rds"), test.task = readRDS
 learner = "SVM"
 cv.iters = 2L
 ninit = 10L
-maxeval = 15L
+maxeval = 12L
 maxtime = 60L
 filter.methods = c("anova.test", "auc", "mrmr", "ranger.impurity")
 

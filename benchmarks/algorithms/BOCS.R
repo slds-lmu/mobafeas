@@ -105,7 +105,7 @@ BOCS = function(data, job, instance, learner, initialization,
 
   # workaround to get the proper result object
   ctrl = makeMBOControl()
-  ctrl = setMBOControlTermination(ctrl, max.evals = maxeval)
+  ctrl = setMBOControlTermination(ctrl, iters = 1)
 
   res = mbo(fun = mfo, learner = makeLearner("regr.randomForest", predict.type = "se"), design = design, control = ctrl)
 
@@ -113,7 +113,7 @@ BOCS = function(data, job, instance, learner, initialization,
     parallelMap::parallelStop()
 
 
-  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune, y = ))
+  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune, y = y))
 } 
 
 
