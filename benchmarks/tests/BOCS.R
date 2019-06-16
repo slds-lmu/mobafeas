@@ -9,8 +9,6 @@ source("algorithms/BOCS.R")
 # load packages
 lapply(packages, library, character.only = TRUE)
 
-
-
 data = NULL
 job = NULL 
 instance = list(train.task = readRDS("data/sonar/task.rds"), test.task = readRDS("data/sonar/task.rds"))
@@ -25,6 +23,7 @@ filter.methods = c("anova.test", "auc", "mrmr", "ranger.impurity")
 # Single objective
 res = BOCS(data, job, instance, learner, "unif", maxeval, maxtime, cv.iters, 
 	sim_anneal = TRUE, lambda = 0L, ninit = ninit, objective = "SO", parallelize = FALSE)
+
 expect_true(res$result$y < 1)
 
 

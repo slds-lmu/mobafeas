@@ -1,3 +1,77 @@
+makeMobafeasObjective2 <- function(learner, task, ps = pSS(), resampling, measure = NULL, holdout.data = NULL, worst.measure = NULL, cpo = NULLCPO, multi.objective = TRUE) {
+
+  if (is.null(measure)) {
+    measure <- getDefaultMeasure(task)
+  }
+  assertClass(learner, "Learner")
+  assertClass(cpo, "CPO")
+  assertClass(task, "Task")
+  assertClass(holdout.data, "Task", null.ok = TRUE)
+  assertClass(ps, "ParamSet")
+  assert(checkClass(resampling, "ResampleInstance"), checkClass(resampling, "ResampleDesc"))
+  assertClass(measure, "Measure")
+  assert(
+      checkFlag(multi.objective),
+      checkFunction(multi.objective)
+  )
+  if (is.null(worst.measure)) {
+    worst.measure <- measure$worst
+  }
+  assertNumber(worst.measure)
+  if (is.function(multi.objective)) {
+    trafo.fun <- multi.objective
+    multi.objective <- FALSE
+  } else {
+    obj.factor <- if (measure$minimize) 1 else -1
+    trafo.fun <- function(performance, featfrac) {
+      performance * obj.factor
+    }
+  }
+  worst.measure <- trafo.fun(worst.measure, 1)
+  ps <- c(ps, pSS(selector.selection = NA:integer[0, 1]^getTaskNFeats(task)))
+  learner <- cpoSelector() %>>% checkLearner(learner, type = getTaskType(task))
+  learner %<<<% cpo
+  argnames <- getParamIds(getParamSet(learner))
+  fun <- smoof::makeSingleObjectiveFunction(sprintf("mosmafs_%s_%s", learner$id, task$task.desc$id),
+    has.simple.signature = FALSE, par.set = ps, noisy = TRUE,
+    fn = function(x) {
+      args <- x
+      propfeat <- mean(args$selector.selection)
+      args <- args[intersect(names(args), argnames)]
+      args$selector.selection <- as.logical(args$selector.selection)
+      learner <- setHyperPars(learner, par.vals = args)
+      untransformed.val <- resample(learner, task, resampling, list(measure), show.info = FALSE)$aggr
+
+      if (is.na(untransformed.val)) {
+        ret <- worst.measure
+      } else {
+        ret <- unname(trafo.fun(untransformed.val, propfeat))
+      }
+      # c(perf = ret, propfeat = propfeat)
+      extras <- list(.untransformed.val = untransformed.val, .propfeat = propfeat)
+      if (!is.null(holdout.data)) {
+        model <- train(learner, task)
+        prd <- predict(model, holdout.data)
+        untransformed.holdout <- performance(prd, list(measure), task, model)[1]
+        if (is.na(untransformed.holdout)) {
+          holdout <- worst.measure
+        } else {
+          holdout <- unname(trafo.fun(untransformed.holdout, propfeat))
+        }
+        extras$.holdout <- holdout
+        extras$.untransformed.holdout <- untransformed.holdout
+      }
+      attr(ret, "extras") <- extras
+      ret
+    })
+  attr(fun, "co.objective") <- if (multi.objective) function(design) {
+    apply(design[grepl("^selector\\.selection[0-9]+$", colnames(design))], 1, mean)
+  } else function(design) {
+    rep(0, nrow(design))
+  }
+  attr(fun, "nadir") <- c(worst.measure, 1)
+  fun
+}
 
 
 

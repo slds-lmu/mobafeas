@@ -29,7 +29,7 @@ reg = loadRegistry("registry2", writeable = TRUE)
 tab = summarizeExperiments(by = c("job.id", "algorithm", 
 	"problem", "learner", "maxeval", "cv.iters", "sim_anneal", "initialization",
 	"lambda", "ninit", "objective", "kernel", "joint.hyperpars", "parallelize"))
-tosubmit = tab[algorithm == "BOCS" & maxeval == 120 & initialization == "unif" & objective == "SO", ]
+tosubmit = tab[algorithm == "BOCS" & maxeval == 30 & initialization == "unif" & objective == "SO", ]
 
 # according to the paper, simmulated annealing is much faster
 # thus we will use simmulated annealing
@@ -66,7 +66,7 @@ tosubmit = ijoin(tosubmit, findNotDone())
 tosubmit = tosubmit[- which(job.id %in% findOnSystem()$job.id), ]
 tosubmit$chunk = rep(1:(nrow(tosubmit) / 2L), 2L)
 
-submitJobs(tosubmit, resources = resources.mpp2)
+submitJobs(tosubmit[1, ], resources = resources.serial)
 testJob(4957)
 
 # --- LRZ ivymuc ---  
