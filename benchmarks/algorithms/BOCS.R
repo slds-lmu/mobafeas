@@ -101,7 +101,7 @@ BOCS = function(data, job, instance, learner, initialization,
 
   design = data.frame(rbind(inputs$x_vals, z[[1]]))
   names(design) = paste("selector.selection", 1:getTaskNFeats(train.task), sep = "")
-  # design$y = c(inputs$y_vals, z[[2]])
+  y = c(inputs$y_vals, z[[2]])
 
   # workaround to get the proper result object
   ctrl = makeMBOControl()
@@ -113,24 +113,5 @@ BOCS = function(data, job, instance, learner, initialization,
     parallelMap::parallelStop()
 
 
-  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune, y = y))
+  return(list(result = res, task.test = test.task, task.train = train.task, runtime = runtime, tunetime = timetune, runtimebocs = z[[3]], y = y))
 } 
-
-
-library(mlrMBO)
-fn = makeSingleObjectiveFunction(
-  name = "test", 
-  fn = function(x) {
-    res = sum(x^2)
-    setAttribute(res, "extras", list(.foo = runif(1)))
-  }, 
-  par.set = makeNumericParamSet(id = "x", len = 2, -2, 2))
-ctrl = makeMBOControl()
-ctrl = setMBOControlTermination(ctrl, iters = 3)
-des = generateDesign(n = 10L, par.set = getParamSet(fn))
-res1 = mbo(fn, design = des, control = ctrl)
-#works fine
-des$y = apply(des,1,fn)
-res2 = mbo(fn, design = des, control = ctrl)
-as.data.frame(res2$opt.path)
-getOptPathEl(res$opt.path, 16)
